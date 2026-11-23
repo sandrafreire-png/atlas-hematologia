@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="dashboard">
+  <meta name="design-style" content="vitals">
+  <title>Atlas Interactivo de Hematología — Series Madurativas y Casos Clínicos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Figtree:wght@300..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Page and surfaces (Vitals) */
+      --background: #ffffff;
+      --surface-container-low: #f1f7f8;
+      --surface-container: #e3f1f3;
+      --surface-container-high: #d5e9ec;
+
+      /* Text */
+      --on-surface: #1b2b33;
+      --on-surface-variant: #46585f;
+
+      /* Rules */
+      --outline: #7b9198;
+      --outline-variant: #d5e3e5;
+
+      /* Accents */
+      --primary: #0f7c8a;
+      --on-primary: #ffffff;
+      --primary-container: #e3f1f3;
+      --on-primary-container: #0a5560;
+      --secondary: #1d5e3a;
+      --tertiary: #2e7d4f;
+      --error: #b3261e;
+      --on-error: #ffffff;
+
+      /* Semantic */
+      --positive: #2e7d4f;
+      --warning: #b86e00;
+      --focus: #0f7c8a;
+
+      /* Data series */
+      --data-1: #0f7c8a;
+      --data-2: #2e7d4f;
+      --data-3: #b86e00;
+      --data-4: #5c5fb0;
+      --data-context: #b8c7ca;
+
+      /* Cytohematology & Giemsa / Brilliant Cresyl Blue Stain Palette */
+      --stain-field: #faf6f7;
+      --stain-field-marrow: #f6f2f6;
+      --stain-rbc: #df8e8b;
+      --stain-rbc-highlight: #f3c4c2;
+      --stain-rbc-pale: #f8e5e4;
+      --stain-rbc-poly: #b9a4c9;
+      --stain-chromatin: #48286b;
+      --stain-chromatin-dark: #2c1447;
+      --stain-nucleolus: #8ea6d8;
+      --stain-cyto-baso: #4c6fb3;
+      --stain-cyto-light: #a8bde0;
+      --stain-cyto-acid: #e6b8b8;
+      --stain-granule-azur: #8a1f5c;
+      --stain-granule-eo: #d95a38;
+      --stain-granule-baso: #231838;
+      --stain-platelet: #986bb8;
+      --stain-hbh: #266c8a;
+      --stain-retic: #1a5875;
+
+      /* Fonts */
+      --font-headline: 'Figtree', sans-serif;
+      --font-body: 'Atkinson Hyperlegible', sans-serif;
+      --font-label: 'Figtree', sans-serif;
+
+      /* Shape */
+      --rounded: 0.625rem;
+      --rounded-lg: 0.875rem;
+      --rounded-full: 9999px;
+
+      /* Style effects */
+      --top-bar: 6px solid var(--primary);
+      --status-bar-width: 4px;
+      --card-border: 1px solid var(--outline-variant);
+      --card-lift: 0 1px 2px rgb(27 43 51 / 0.05), 0 6px 16px rgb(27 43 51 / 0.05);
+
+      /* Type scale (Dashboard / Data Explorer) */
+      --display-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+      --headline-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+      --subhead-size: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+      --body-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+      --label-size: 0.75rem;
+
+      /* Spacing scale (4pt base) */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { overflow-x: clip; margin: 0; padding: 0; }
+    header { position: static !important; }
+
+    body {
+      background-color: var(--surface-container-low);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.6;
+      border-top: var(--top-bar);
+    }
+
+    .page-grid {
+      display: grid;
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      max-width: 1220px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    .page-grid * { min-width: 0; }
+
+    /* Focus rings */
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 {
+      font-family: var(--font-headline);
+      color: var(--on-surface);
+      margin: 0;
+    }
+
+    .title {
+      font-size: var(--display-size);
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      line-height: 1.08;
+    }
+
+    .section-heading {
+      font-size: var(--headline-size);
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      line-height: 1.15;
+    }
+
+    .subhead {
+      font-size: var(--subhead-size);
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .lede {
+      font-size: 1.0625rem;
+      line-height: 1.6;
+      color: var(--on-surface-variant);
+      max-width: 65ch;
+      margin-top: var(--space-sm);
+      margin-bottom: 0;
+    }
+
+    .kicker {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      display: block;
+      margin-bottom: var(--space-xs);
+    }
+
+    .tabular-num {
+      font-family: var(--font-headline);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    /* Header block */
+    .atlas-header {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .header-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-md);
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+
+    /* Jump Navigation */
+    .nav-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      border-top: 1px solid var(--outline-variant);
+      padding-top: var(--space-md);
+    }
+
+    .nav-link {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--body-size);
+      color: var(--primary);
+      text-decoration: none;
+      padding-bottom: var(--space-xs);
+      border-bottom: 3px solid transparent;
+      transition: border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .nav-link:hover, .nav-link.is-active {
+      border-bottom-color: var(--primary);
+      color: var(--on-primary-container);
+    }
+
+    /* KPI Row */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+
+    .status-card {
+      background: var(--background);
+      border: var(--card-border);
+      border-left: var(--status-bar-width) solid var(--primary);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .status-card[data-status="ok"] { border-left-color: var(--tertiary); }
+    .status-card[data-status="alert"] { border-left-color: var(--error); }
+    .status-card[data-status="watch"] { border-left-color: var(--data-3); }
+
+    .kpi-value {
+      font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+      line-height: 1.1;
+      color: var(--on-surface);
+    }
+
+    .kpi-caption {
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+    }
+    .kpi-caption[data-status="ok"] { color: var(--secondary); font-weight: 700; }
+
+    /* Chips & Badges */
+    .chip {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--rounded-full);
+      background: color-mix(in srgb, var(--tertiary) 14%, var(--background));
+      color: var(--secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      white-space: nowrap;
+    }
+
+    .chip[data-status="info"] {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+
+    .chip[data-status="alert"] {
+      background: color-mix(in srgb, var(--error) 10%, var(--background));
+      color: var(--error);
+    }
+
+    .chip[data-status="watch"] {
+      background: color-mix(in srgb, var(--data-3) 14%, var(--background));
+      color: var(--on-surface);
+    }
+
+    /* Buttons */
+    .btn {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.9375rem;
+      border-radius: var(--rounded);
+      padding: 0.625rem 1.125rem;
+      min-height: 44px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      border: 1px solid transparent;
+      transition: background-color var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+    .btn-primary:hover { background: var(--on-primary-container); }
+
+    .btn-secondary {
+      background: var(--background);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn-secondary:hover { background: var(--surface-container-low); }
+
+    .btn-ghost {
+      background: var(--background);
+      color: var(--on-surface);
+      border-color: var(--outline-variant);
+    }
+    .btn-ghost:hover { background: var(--surface-container); }
+
+    .btn-ghost.is-active {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      border-color: var(--primary);
+    }
+
+    /* Panels & Sections */
+    .panel {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .section-header-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: var(--space-md);
+      border-bottom: 1px solid var(--outline-variant);
+      padding-bottom: var(--space-md);
+    }
+
+    /* Filter & Search Controls */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      align-items: end;
+      justify-content: space-between;
+    }
+
+    .lineage-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      min-width: min(260px, 100%);
+    }
+
+    .field-label {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .text-input, .select-input {
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      color: var(--on-surface);
+      background: var(--background);
+      border: 1px solid var(--outline);
+      border-radius: var(--rounded);
+      padding: 0.5625rem 0.875rem;
+      min-height: 44px;
+    }
+
+    .select-input {
+      padding-right: 2.25rem;
+    }
+
+    .text-input:focus, .select-input:focus {
+      border-color: var(--primary);
+      outline: 2px solid color-mix(in srgb, var(--primary) 25%, transparent);
+    }
+
+    /* Atlas Split Workbench */
+    .atlas-workbench {
+      display: grid;
+      grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+
+    .stage-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      max-height: 680px;
+      overflow-y: auto;
+      padding-right: var(--space-xs);
+    }
+
+    .stage-item {
+      width: 100%;
+      text-align: left;
+      background: var(--background);
+      border: var(--card-border);
+      border-left: var(--status-bar-width) solid var(--outline-variant);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      min-height: 44px;
+      font-family: inherit;
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+
+    .stage-item:hover {
+      background: var(--surface-container-low);
+    }
+
+    .stage-item.is-selected {
+      background: var(--surface-container);
+      border-color: var(--primary);
+      border-left-color: var(--primary);
+    }
+
+    .stage-item.is-studied {
+      border-left-color: var(--tertiary);
+    }
+
+    .stage-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-sm);
+      width: 100%;
+    }
+
+    .stage-item-name {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 0.96875rem;
+      color: var(--on-surface);
+    }
+
+    .stage-item-sub {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Detail Viewer */
+    .stage-detail-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .detail-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-md);
+    }
+
+    .detail-split {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) minmax(260px, 1.15fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+
+    /* Microscopy Viewport */
+    .microscope-frame {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .microscope-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .microscope-stage {
+      position: relative;
+      background: var(--stain-field);
+      aspect-ratio: 4 / 3;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .microscope-stage[data-compartment="mo"] {
+      background: var(--stain-field-marrow);
+    }
+
+    .microscope-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transition: transform var(--dur-short) var(--ease-out);
+      transform-origin: center center;
+    }
+
+    .microscope-svg.is-zoomed {
+      transform: scale(1.38);
+    }
+
+    .microscope-caption {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 0.84375rem;
+      color: var(--on-surface-variant);
+      border-top: 1px solid var(--outline-variant);
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .annotation-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+      margin-top: var(--space-xs);
+    }
+
+    /* Spec Table inside detail */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+      gap: var(--space-sm);
+    }
+
+    .spec-box {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    .spec-box-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+    }
+
+    .spec-box-value {
+      font-weight: 700;
+      color: var(--on-surface);
+      margin-top: 2px;
+      font-size: 0.9375rem;
+    }
+
+    .callout-box {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      border-left: var(--status-bar-width) solid var(--primary);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+      font-size: 0.9375rem;
+    }
+
+    /* Reference Range Band Chart */
+    .chart-wrapper {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+      min-height: 280px;
+    }
+
+    .range-band {
+      fill: var(--tertiary);
+      fill-opacity: 0.12;
+      stroke: none;
+    }
+
+    /* Semiología Table */
+    .table-scroll {
+      overflow-x: auto;
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      background: var(--background);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9375rem;
+    }
+
+    table.data-table thead {
+      background: var(--surface-container-low);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    table.data-table th {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    table.data-table td {
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--outline-variant);
+      vertical-align: top;
+    }
+
+    table.data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Clinical Cases Section */
+    .cases-layout {
+      display: grid;
+      grid-template-columns: minmax(240px, 310px) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+
+    .case-selector-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .case-card-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--background);
+      border: var(--card-border);
+      border-left: var(--status-bar-width) solid var(--primary);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      min-height: 44px;
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+
+    .case-card-btn:hover { background: var(--surface-container-low); }
+    .case-card-btn.is-selected {
+      background: var(--surface-container);
+      border-color: var(--primary);
+    }
+    .case-card-btn[data-solved="correct"] { border-left-color: var(--tertiary); }
+    .case-card-btn[data-solved="wrong"] { border-left-color: var(--error); }
+
+    .quiz-options {
+      display: grid;
+      gap: var(--space-sm);
+    }
+
+    .quiz-option-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--background);
+      border: 1px solid var(--outline);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+      min-height: 44px;
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      color: var(--on-surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+
+    .quiz-option-btn:hover:not(:disabled) {
+      background: var(--surface-container-low);
+      border-color: var(--primary);
+    }
+
+    .quiz-option-btn.is-correct {
+      background: color-mix(in srgb, var(--tertiary) 12%, var(--background));
+      border-color: var(--tertiary);
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    .quiz-option-btn.is-incorrect {
+      background: color-mix(in srgb, var(--error) 10%, var(--background));
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    .feedback-box {
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+      border: var(--card-border);
+      border-left: var(--status-bar-width) solid var(--primary);
+      background: var(--background);
+    }
+
+    .feedback-box[data-status="ok"] { border-left-color: var(--tertiary); }
+    .feedback-box[data-status="alert"] { border-left-color: var(--error); }
+
+    /* Footer */
+    .atlas-footer {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+
+    .inline-confirm-note {
+      font-size: 0.875rem;
+      color: var(--on-primary-container);
+      font-weight: 700;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .atlas-workbench,
+      .cases-layout,
+      .detail-split {
+        grid-template-columns: 1fr;
+      }
+      .stage-list {
+        max-height: 280px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-grid {
+        padding: var(--space-sm);
+        gap: var(--space-md);
+      }
+      .atlas-header, .panel, .stage-detail-card {
+        padding: var(--space-md);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-grid">
+    <header class="atlas-header">
+      <div class="header-top">
+        <div>
+          <span class="kicker">Herramienta de Estudio Citohematológico</span>
+          <h1 class="title">Atlas Interactivo de Hematología</h1>
+          <p class="lede">
+            Guía morfológica por series hematopoyéticas, estadios madurativos en médula ósea y sangre periférica, semiología celular y casos clínicos con frotis teñidos.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-secondary" id="btn-export-progress" onclick="exportStudyReport()">
+            <i data-lucide="download" aria-hidden="true"></i>
+            Exportar resumen
+          </button>
+          <button type="button" class="btn btn-ghost" id="btn-reset-progress" onclick="handleResetProgress(this)">
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+            Reiniciar progreso
+          </button>
+        </div>
+      </div>
+
+      <nav class="nav-strip" aria-label="Secciones del atlas">
+        <a href="#sec-series" class="nav-link is-active" onclick="highlightNav(this)">
+          <i data-lucide="microscope" aria-hidden="true"></i>
+          Series y Maduración Celular
+        </a>
+        <a href="#sec-indices" class="nav-link" onclick="highlightNav(this)">
+          <i data-lucide="activity" aria-hidden="true"></i>
+          Índices y Bandas de Referencia
+        </a>
+        <a href="#sec-semiologia" class="nav-link" onclick="highlightNav(this)">
+          <i data-lucide="table-2" aria-hidden="true"></i>
+          Semiología Morfológica
+        </a>
+        <a href="#sec-casos" class="nav-link" onclick="highlightNav(this)">
+          <i data-lucide="stethoscope" aria-hidden="true"></i>
+          Casos Clínicos Prácticos
+        </a>
+      </nav>
+    </header>
+
+    <!-- KPI Summary Strip -->
+    <section class="kpi-grid" aria-label="Resumen de progreso y parámetros">
+      <div class="status-card" data-status="info">
+        <span class="kicker">Estadios catalogados</span>
+        <div class="kpi-value tabular-num" id="kpi-stages-studied">0 / 15</div>
+        <span class="kpi-caption" id="kpi-stages-caption">Explora cada línea madurativa</span>
+      </div>
+      <div class="status-card" data-status="ok">
+        <span class="kicker">Casos clínicos resueltos</span>
+        <div class="kpi-value tabular-num" id="kpi-cases-solved">0 / 6</div>
+        <span class="kpi-caption" data-status="ok" id="kpi-cases-caption">Frotis periféricos y medulares</span>
+      </div>
+      <div class="status-card" data-status="info">
+        <span class="kicker">Referencia eritrocitaria normal</span>
+        <div class="kpi-value tabular-num">VCM 85 fL</div>
+        <span class="kpi-caption">RDW 13% · CHCM 33,4% (May-Grünwald Giemsa)</span>
+      </div>
+      <div class="status-card" data-status="watch">
+        <span class="kicker">Aumentos de observación</span>
+        <div class="kpi-value tabular-num">400x · 1000x</div>
+        <span class="kpi-caption">Muestra: sangre entera EDTA / MO</span>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 1: SERIES HEMATOPOYÉTICAS Y ESTADIOS MADURATIVOS -->
+    <section id="sec-series" class="panel" aria-labelledby="heading-series">
+      <div class="section-header-row">
+        <div>
+          <span class="kicker">01 · Morfología y Citometría Óptica</span>
+          <h2 id="heading-series" class="section-heading">Series Hematopoyéticas y Estadios Madurativos</h2>
+        </div>
+        <span class="chip" data-status="info" id="series-count-chip">15 estadios disponibles</span>
+      </div>
+
+      <div class="controls-bar">
+        <div class="lineage-tabs" role="group" aria-label="Filtrar por serie hematopoyética">
+          <button type="button" class="btn btn-ghost is-active" data-series="all" onclick="setSeriesFilter('all', this)">Todas las series</button>
+          <button type="button" class="btn btn-ghost" data-series="roja" onclick="setSeriesFilter('roja', this)">Serie Roja / Eritroide</button>
+          <button type="button" class="btn btn-ghost" data-series="blanca" onclick="setSeriesFilter('blanca', this)">Serie Blanca / Leucocitaria</button>
+          <button type="button" class="btn btn-ghost" data-series="megacariocitica" onclick="setSeriesFilter('megacariocitica', this)">Serie Megacariocítica / Plaquetaria</button>
+        </div>
+
+        <div class="field-group">
+          <label for="stage-search" class="field-label">Buscar estadio, granulación o hallazgo</label>
+          <input type="search" id="stage-search" class="text-input" placeholder="Ej. normoblasto, Auer, mielocito, plaqueta..." oninput="handleStageSearch(this.value)">
+        </div>
+      </div>
+
+      <div class="atlas-workbench">
+        <div class="stage-list" id="stage-list" role="listbox" aria-label="Lista de estadios madurativos"></div>
+
+        <article class="stage-detail-card" id="stage-detail" aria-live="polite">
+          <div class="detail-header">
+            <div>
+              <span class="kicker" id="detail-lineage-kicker">Serie Roja / Eritroide</span>
+              <h3 class="section-heading" id="detail-title">Seleccione un estadio</h3>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:var(--space-sm); align-items:center;">
+              <span class="chip" data-status="info" id="detail-compartment-chip">Médula Ósea</span>
+              <button type="button" class="btn btn-primary" id="btn-mark-studied" onclick="toggleCurrentStageStudied()">
+                <i data-lucide="check-circle" aria-hidden="true"></i>
+                Marcar como estudiado
+              </button>
+            </div>
+          </div>
+
+          <div class="detail-split">
+            <div class="microscope-frame">
+              <div class="microscope-toolbar">
+                <span class="kicker" style="margin:0;" id="detail-stain-label">May-Grünwald Giemsa · 1000x</span>
+                <div style="display:flex; gap:var(--space-xs);">
+                  <button type="button" class="btn btn-ghost" style="min-height:36px; padding:0.25rem 0.625rem; font-size:0.8125rem;" id="btn-toggle-labels" onclick="toggleStageAnnotations()">Etiquetas</button>
+                  <button type="button" class="btn btn-ghost" style="min-height:36px; padding:0.25rem 0.625rem; font-size:0.8125rem;" id="btn-toggle-zoom" onclick="toggleStageZoom()">Zoom 1000x</button>
+                </div>
+              </div>
+              <div class="microscope-stage" id="stage-microscope-bg" data-compartment="mo">
+                <svg id="stage-svg" class="microscope-svg" viewBox="0 0 400 300" role="img" aria-label="Representación microscópica del estadio celular"></svg>
+              </div>
+              <div class="microscope-caption">
+                <span id="detail-micro-caption"></span>
+                <div class="annotation-list" id="detail-annotations"></div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+              <p id="detail-description" style="margin:0;"></p>
+
+              <div class="spec-grid">
+                <div class="spec-box">
+                  <div class="spec-box-label">Diámetro celular</div>
+                  <div class="spec-box-value tabular-num" id="spec-diameter">—</div>
+                </div>
+                <div class="spec-box">
+                  <div class="spec-box-label">Relación N:C</div>
+                  <div class="spec-box-value" id="spec-nc">—</div>
+                </div>
+                <div class="spec-box">
+                  <div class="spec-box-label">Cromatina y nucléolos</div>
+                  <div class="spec-box-value" id="spec-chromatin">—</div>
+                </div>
+                <div class="spec-box">
+                  <div class="spec-box-label">Citoplasma / Gránulos</div>
+                  <div class="spec-box-value" id="spec-cytoplasm">—</div>
+                </div>
+              </div>
+
+              <div class="callout-box">
+                <strong>Clave citohematológica para el estudiante:</strong>
+                <span id="detail-clinical-key"></span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: ÍNDICES ERITROCITARIOS Y PROGRESIÓN DE TAMAÑO / MADURACIÓN -->
+    <section id="sec-indices" class="panel" aria-labelledby="heading-indices">
+      <div class="section-header-row">
+        <div>
+          <span class="kicker">02 · Hematimetría y Bandas de Referencia</span>
+          <h2 id="heading-indices" class="section-heading">Reducción del Diámetro Celular y Parámetros Eritrocitarios Normales</h2>
+        </div>
+        <div class="field-group" style="min-width:220px;">
+          <label for="chart-lineage-select" class="field-label">Curva madurativa a visualizar</label>
+          <select id="chart-lineage-select" class="select-input" onchange="renderMaturationChart(this.value)">
+            <option value="roja">Serie Roja (Diámetro y pérdida nuclear)</option>
+            <option value="blanca">Serie Mieloide (Diámetro y segmentación)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="detail-split">
+        <div class="chart-wrapper">
+          <div style="font-family:var(--font-headline); font-weight:700; margin-bottom:var(--space-sm);" id="chart-title">
+            Diámetro celular (µm) a lo largo de la maduración eritroide con banda de normocito (6–8 µm)
+          </div>
+          <svg id="maturation-chart-svg" viewBox="0 0 600 260" style="width:100%; height:auto; min-height:220px;" role="img" aria-label="Gráfico de diámetro celular en los estadios de maduración"></svg>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+          <div class="status-card" data-status="ok">
+            <span class="kicker">Eritrocito Normocítico Normocrómico (Frotis Control)</span>
+            <p style="margin:0;">
+              En sangre entera con EDTA teñida con May-Grünwald Giemsa (400x), el eritrocito maduro carece de núcleo y presenta palidez central fisiológica de aproximadamente un tercio de su diámetro.
+            </p>
+            <div style="display:flex; flex-wrap:wrap; gap:var(--space-sm); margin-top:var(--space-xs);">
+              <span class="chip">VCM = 85 fL (Normal)</span>
+              <span class="chip">RDW = 13% (Homogéneo)</span>
+              <span class="chip">CHCM = 33,4% (Normocrómico)</span>
+            </div>
+          </div>
+
+          <div class="status-card" data-status="info">
+            <span class="kicker">Regla de maduración hematopoyética</span>
+            <p style="margin:0;">
+              Conforme progresa la maduración desde el blasto hacia la célula efectora madura, disminuyen el <strong>diámetro celular</strong> y la <strong>basofilia citoplasmática</strong> (menor densidad de ARN ribosómico), se condensa la <strong>cromatina</strong> desapareciendo los nucléolos y aumenta el contenido específico (hemoglobina en serie roja; gránulos específicos en serie blanca).
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: SEMIOLOGÍA MORFOLÓGICA COMPARATIVA -->
+    <section id="sec-semiologia" class="panel" aria-labelledby="heading-semiologia">
+      <div class="section-header-row">
+        <div>
+          <span class="kicker">03 · Taxonomía de Hallazgos en Frotis</span>
+          <h2 id="heading-semiologia" class="section-heading">Semiología Eritrocitaria, Leucocitaria y Plaquetaria</h2>
+        </div>
+        <div class="lineage-tabs" role="group" aria-label="Filtrar tabla semiológica">
+          <button type="button" class="btn btn-ghost is-active" data-semio="all" onclick="filterSemioTable('all', this)">Todos</button>
+          <button type="button" class="btn btn-ghost" data-semio="tamaño" onclick="filterSemioTable('tamaño', this)">Tamaño / Color</button>
+          <button type="button" class="btn btn-ghost" data-semio="forma" onclick="filterSemioTable('forma', this)">Poiquilocitosis</button>
+          <button type="button" class="btn btn-ghost" data-semio="inclusiones" onclick="filterSemioTable('inclusiones', this)">Inclusiones y Leucocitos/Plaquetas</button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Categoría semiológica</th>
+              <th>Hallazgo morfológico</th>
+              <th>Descripción microscópica</th>
+              <th>Asociación diagnóstica principal</th>
+            </tr>
+          </thead>
+          <tbody id="semio-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: CASOS CLÍNICOS PRÁCTICOS CON FROTIS PERIFÉRICOS Y MEDULARES -->
+    <section id="sec-casos" class="panel" aria-labelledby="heading-casos">
+      <div class="section-header-row">
+        <div>
+          <span class="kicker">04 · Práctica Diagnóstica</span>
+          <h2 id="heading-casos" class="section-heading">Casos Clínicos con Frotis Periféricos y Medulares</h2>
+        </div>
+        <span class="chip" data-status="info" id="cases-progress-chip">0 de 6 completados</span>
+      </div>
+
+      <div class="cases-layout">
+        <div class="case-selector-list" id="case-selector-list" role="listbox" aria-label="Lista de casos clínicos"></div>
+
+        <article class="stage-detail-card" id="case-detail-panel" aria-live="polite">
+          <div class="detail-header">
+            <div>
+              <span class="kicker" id="case-sample-kicker">Sangre Periférica · EDTA</span>
+              <h3 class="section-heading" id="case-title">Caso Clínico</h3>
+            </div>
+            <span class="chip" data-status="info" id="case-status-chip">Pendiente de diagnóstico</span>
+          </div>
+
+          <div class="detail-split">
+            <div class="microscope-frame">
+              <div class="microscope-toolbar">
+                <span class="kicker" style="margin:0;" id="case-stain-meta">Tinción: May-Grünwald Giemsa · 1000x</span>
+                <div style="display:flex; gap:var(--space-xs);">
+                  <button type="button" class="btn btn-ghost" style="min-height:36px; padding:0.25rem 0.625rem; font-size:0.8125rem;" id="btn-case-hints" onclick="toggleCasePointers()">Señalar hallazgos</button>
+                  <button type="button" class="btn btn-ghost" style="min-height:36px; padding:0.25rem 0.625rem; font-size:0.8125rem;" id="btn-case-zoom" onclick="toggleCaseZoom()">Zoom</button>
+                </div>
+              </div>
+              <div class="microscope-stage" id="case-microscope-bg" data-compartment="sp">
+                <svg id="case-svg" class="microscope-svg" viewBox="0 0 400 300" role="img" aria-label="Frotis del caso clínico"></svg>
+              </div>
+              <div class="microscope-caption">
+                <span id="case-smear-caption"></span>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+              <div>
+                <span class="kicker">Presentación y hallazgos observados en el frotis</span>
+                <p id="case-history" style="margin:0;"></p>
+              </div>
+
+              <div style="background:var(--background); border:var(--card-border); border-radius:var(--rounded); padding:var(--space-md);">
+                <div style="font-family:var(--font-headline); font-weight:700; margin-bottom:var(--space-sm);" id="case-question">
+                  ¿Cuál es la interpretación diagnóstica más compatible?
+                </div>
+                <div class="quiz-options" id="case-options"></div>
+              </div>
+
+              <div class="feedback-box" id="case-feedback" hidden>
+                <div style="font-family:var(--font-headline); font-weight:700;" id="case-feedback-title"></div>
+                <p id="case-feedback-body" style="margin:var(--space-xs) 0 0 0;"></p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="atlas-footer">
+      <div>
+        <strong>Atlas Interactivo de Hematología</strong> — Herramienta educativa diseñada para el estudio de morfología hematopoyética normal y patológica.
+      </div>
+      <div>
+        Fuentes de referencia: Atlas de Hematología (Qualitat — aterres / qualitat.cc), Atlas de Hematología Educación a Distancia (Versión 03092024) y Categorías del Atlas GECHEM.
+      </div>
+    </footer>
+  </div>
+
+  <api-shim></api-shim>
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script>
+    const STAGES_DATA = [
+      {
+        id: `eritro-proeritroblasto`,
+        series: `roja`,
+        seriesLabel: `Serie Roja / Eritroide`,
+        order: 1,
+        name: `Proeritroblasto`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (1–2%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `18–25 µm`,
+        diameterNum: 21.5,
+        ncRatio: `Alta (4:1)`,
+        chromatin: `Fina, reticulada y laxa; 1 a 3 nucléolos visibles azulados`,
+        cytoplasm: `Intensa basofilia azul cobalto con halo claro perinuclear (Golgi)`,
+        description: `Primer precursor morfológicamente reconocible de la serie eritroide. Presenta un núcleo grande, redondo y central que ocupa casi la totalidad celular, dejando un estrecho anillo citoplasmático de basofilia profunda.`,
+        clinicalKey: `Distinguirlo del mieloblasto: su citoplasma es mucho más intensamente basófilo y a menudo exhibe pequeñas protrusiones o "orejas" citoplasmáticas sin granulación azurófila.`,
+        caption: `Médula ósea: núcleo redondo con cromatina fina y citoplasma intensamente basófilo.`,
+        annotations: [`Núcleo redondo central`, `1–2 nucléolos`, `Basofilia intensa`, `Halo claro perinuclear`],
+        svgType: `proeritroblasto`
+      },
+      {
+        id: `eritro-basofilo`,
+        series: `roja`,
+        seriesLabel: `Serie Roja / Eritroide`,
+        order: 2,
+        name: `Eritroblasto Basófilo (Normoblasto Basófilo)`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (1–4%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `12–17 µm`,
+        diameterNum: 14.5,
+        ncRatio: `Moderada-Alta (3:1)`,
+        chromatin: `Condensación inicial en grumos radiales ("rueda de carro" incipiente); sin nucléolos`,
+        cytoplasm: `Basofilia intensa y uniforme por alta concentración de polirribosomas`,
+        description: `Producto mitótico del proeritroblasto. La síntesis activa de ARN para producir hemoglobina confiere una coloración azul intensa, mientras que los nucléolos desaparecen y la cromatina comienza a agruparse.`,
+        clinicalKey: `En reacciones leucoeritroblásticas (p. ej. metástasis a médula ósea) puede observarse de forma prematura en sangre periférica junto a precursores mieloides.`,
+        caption: `Normoblasto basófilo: cromatina en grumos incipientes y ausencia de nucléolos.`,
+        annotations: [`Sin nucléolos`, `Cromatina en grumos`, `Citoplasma azul profundo`],
+        svgType: `eritroblasto_basofilo`
+      },
+      {
+        id: `eritro-policromatico`,
+        series: `roja`,
+        seriesLabel: `Serie Roja / Eritroide`,
+        order: 3,
+        name: `Eritroblasto Policromático`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (10–20%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `10–14 µm`,
+        diameterNum: 12.0,
+        ncRatio: `Equilibrada (1:1)`,
+        chromatin: `Muy condensada en bloques gruesos alternados con zonas claras`,
+        cytoplasm: `Gris-violáceo o azulado-rosado por mezcla de ARN y hemoglobina`,
+        description: `Último estadio eritroide con capacidad mitótica. La coexistencia de ribosomas basófilos y hemoglobina acidófila genera la policromasia característica del citoplasma.`,
+        clinicalKey: `En anemias megaloblásticas, sideroblásticas, mielodisplasia o eritroblastosis fetal puede mostrar punteado basófilo por aglutinación espontánea de ribosomas.`,
+        caption: `Eritroblasto policromático: transición cromática grisácea y cromatina densa.`,
+        annotations: [`Cromatina en bloques`, `Citoplasma policromático`, `Última etapa mitótica`],
+        svgType: `eritroblasto_policromatico`
+      },
+      {
+        id: `eritro-ortocromatico`,
+        series: `roja`,
+        seriesLabel: `Serie Roja / Eritroide`,
+        order: 4,
+        name: `Eritroblasto Ortocromático (Normoblasto)`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (5–10%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `8–10 µm`,
+        diameterNum: 9.0,
+        ncRatio: `Baja (1:2)`,
+        chromatin: `Picnótica, homogénea y extremadamente densa (masa oscura sin estructura)`,
+        cytoplasm: `Acidófilo / rosado-salmón similar al eritrocito maduro`,
+        description: `Precursor postmitótico que ha completado la hemoglobinización citoplasmática. El núcleo se torna excéntrico y compacto antes de ser expulsado para formar el reticulocito.`,
+        clinicalKey: `Su presencia en sangre periférica (normoblastemia) indica eritropoyesis acelerada (anemia drepanocítica, hemólisis intensa, eritroblastosis fetal) o daño medular.`,
+        caption: `Normoblasto ortocromático: núcleo picnótico excéntrico listo para extrusión.`,
+        annotations: [`Núcleo picnótico denso`, `Posición excéntrica`, `Citoplasma hemoglobinizado`],
+        svgType: `eritroblasto_ortocromatico`
+      },
+      {
+        id: `eritro-reticulocito`,
+        series: `roja`,
+        seriesLabel: `Serie Roja / Eritroide`,
+        order: 5,
+        name: `Reticulocito`,
+        compartment: `sp`,
+        compartmentLabel: `MO y Sangre Periférica (0,5–2%)`,
+        stain: `Azul cresil brillante (Supravital) · 1000x`,
+        diameter: `7,5–9 µm`,
+        diameterNum: 8.2,
+        ncRatio: `Anucleado`,
+        chromatin: `Ausente (núcleo ya extruido)`,
+        cytoplasm: `Red filamentosa-granular azulada (ARN residual) con tinción supravital; policromasia en Giemsa`,
+        description: `Eritrocito joven recién liberado de la médula ósea que conserva restos de ribosomas y mitocondrias durante 24–48 horas en circulación antes de madurar por completo.`,
+        clinicalKey: `La tinción con azul cresil brillante es indispensable para diferenciar el retículo ribosómico agrupado de las inclusiones uniformes de HbH.`,
+        caption: `Tinción supravital con azul cresil brillante: red reticular azul oscuro intracitoplasmática.`,
+        annotations: [`Sin núcleo`, `Sustancia granulofilamentosa`, `Ligera macrocitosis`],
+        svgType: `reticulocito`
+      },
+      {
+        id: `eritro-maduro`,
+        series: `roja`,
+        seriesLabel: `Serie Roja / Eritroide`,
+        order: 6,
+        name: `Eritrocito Maduro (Normocito)`,
+        compartment: `sp`,
+        compartmentLabel: `Sangre Periférica (Predominante)`,
+        stain: `May-Grünwald Giemsa · 400x / 1000x`,
+        diameter: `7,0–7,8 µm`,
+        diameterNum: 7.4,
+        ncRatio: `Anucleado`,
+        chromatin: `Ausente`,
+        cytoplasm: `Rosado-anaranjado uniforme con halo de palidez central de ~1/3 del diámetro`,
+        description: `Disco bicóncavo anucleado especializado en el transporte de oxígeno. En frotis normales presenta homogeneidad de tamaño (VCM 85 fL, RDW 13%) y de concentración hemoglobínica (CHCM 33,4%).`,
+        clinicalKey: `Sirve como regla óptica interna en el frotis: su diámetro (~7,5 µm) equivale al del núcleo de un linfocito pequeño normal.`,
+        caption: `Eritrocitos normocíticos y normocrómicos: VCM 85 fL, RDW 13%, CHCM 33,4%.`,
+        annotations: [`Disco bicóncavo`, `Palidez central 1/3`, `Borde liso y homogéneo`],
+        svgType: `eritrocito_maduro`
+      },
+      {
+        id: `blanca-mieloblasto`,
+        series: `blanca`,
+        seriesLabel: `Serie Blanca / Leucocitaria`,
+        order: 1,
+        name: `Mieloblasto`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (<2% normal)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `15–20 µm`,
+        diameterNum: 17.5,
+        ncRatio: `Muy alta (4:1)`,
+        chromatin: `Fina en "encaje" o "tamiz", uniforme; 2 a 5 nucléolos bien definidos`,
+        cytoplasm: `Escaso, basofilia moderada azul-grisácea; sin gránulos (tipo I) o escasos azurófilos (tipo II)`,
+        description: `Célula progenitora más inmadura de la línea granulocítica. Su núcleo redondo u ovalado ocupa la mayor parte de la célula y muestra nucléolos prominentes.`,
+        clinicalKey: `En leucemias mieloides agudas (LMA M1–M3) los mieloblastos pueden contener bastones de Auer intracitoplasmáticos, hallazgo patognomónico de estirpe mieloide.`,
+        caption: `Mieloblasto: cromatina laxa, nucléolos evidentes y citoplasma agranular o con escasos gránulos.`,
+        annotations: [`Cromatina en tamiz`, `2–4 nucléolos claros`, `Relación N:C muy alta`],
+        svgType: `mieloblasto`
+      },
+      {
+        id: `blanca-promielocito`,
+        series: `blanca`,
+        seriesLabel: `Serie Blanca / Leucocitaria`,
+        order: 2,
+        name: `Promielocito`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (2–5%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `16–24 µm`,
+        diameterNum: 20.0,
+        ncRatio: `Alta (3:1)`,
+        chromatin: `Algo más gruesa que el mieloblasto, pero aún conserva nucléolos visibles`,
+        cytoplasm: `Abundante, basófilo con halo claro paranuclear y numerosos gránulos azurófilos primarios`,
+        description: `Estadio de mayor tamaño en la granulopoyesis normal. Se caracteriza por la aparición masiva de gránulos primarios (azurófilos, ricos en mieloperoxidasa) de color púrpura-rojizo.`,
+        clinicalKey: `Su proliferación clonal con múltiples haces de bastones de Auer ("células en faggot") define la Leucemia Promielocítica Aguda (FAB M3).`,
+        caption: `Promielocito: granulación azurófila primaria abundante y arcoplasma claro.`,
+        annotations: [`Gránulos azurófilos`, `Halo de Golgi claro`, `Nucléolos aún visibles`],
+        svgType: `promielocito`
+      },
+      {
+        id: `blanca-mielocito`,
+        series: `blanca`,
+        seriesLabel: `Serie Blanca / Leucocitaria`,
+        order: 3,
+        name: `Mielocito (Neutrófilo / Eosinófilo)`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (5–19%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `12–18 µm`,
+        diameterNum: 15.0,
+        ncRatio: `Moderada (1,5:1)`,
+        chromatin: `Condensada en placas gruesas, sin nucléolos; núcleo redondo, oval o aplanado en un lado`,
+        cytoplasm: `Acidófilo claro (rosado) con gránulos secundarios específicos (neutrófilos, eosinófilos o basófilos)`,
+        description: `Estadio decisivo donde se define el linaje granulocítico específico gracias a la aparición de los gránulos secundarios. Es la última etapa mieloide capaz de dividirse.`,
+        clinicalKey: `El mielocito eosinófilo muestra gránulos gruesos naranja-rojizos refringentes; su salida a sangre periférica junto a normoblastos define la reacción leucoeritroblástica.`,
+        caption: `Mielocito: núcleo sin nucléolos con cara interna aplanada y granulación específica.`,
+        annotations: [`Sin nucléolos`, `Gránulos secundarios`, `Cara nuclear aplanada`],
+        svgType: `mielocito`
+      },
+      {
+        id: `blanca-metamielocito`,
+        series: `blanca`,
+        seriesLabel: `Serie Blanca / Leucocitaria`,
+        order: 4,
+        name: `Metamielocito`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (13–22%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `10–15 µm`,
+        diameterNum: 12.5,
+        ncRatio: `Moderada-Baja (1:1)`,
+        chromatin: `Densa en grumos gruesos`,
+        cytoplasm: `Rosado pálido con abundantes gránulos secundarios específicos`,
+        description: `Célula postmitótica cuyo núcleo adquiere una hendidura marcada en forma de riñón o haba, con profundidad inferior a la mitad de su ancho.`,
+        clinicalKey: `Su hallazgo ocasional en sangre periférica acompaña a la desviación izquierda en infecciones bacterianas graves o estrés medular.`,
+        caption: `Metamielocito: núcleo arriñonado con cromatina grumosa y citoplasma granuloso.`,
+        annotations: [`Núcleo arriñonado`, `Cromatina condensada`, `Citoplasma rosado granuloso`],
+        svgType: `metamielocito`
+      },
+      {
+        id: `blanca-banda`,
+        series: `blanca`,
+        seriesLabel: `Serie Blanca / Leucocitaria`,
+        order: 5,
+        name: `Neutrófilo en Banda (Cayado)`,
+        compartment: `sp`,
+        compartmentLabel: `MO y Sangre Periférica (0–5%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `10–14 µm`,
+        diameterNum: 12.0,
+        ncRatio: `Baja (1:2)`,
+        chromatin: `Muy condensada en bloques`,
+        cytoplasm: `Rosado claro con finos gránulos neutrófilos uniformemente distribuidos`,
+        description: `Precursor inmediato del neutrófilo segmentado. El núcleo adopta forma de herradura, U o S con bordes paralelos y sin estrangulamientos filamentosos.`,
+        clinicalKey: `Se distingue del segmentado cuando el puente nuclear más estrecho mide más de un tercio del diámetro del lóbulo más ancho (regla morfológica clásica).`,
+        caption: `Cayado o banda: núcleo en herradura de grosor uniforme sin filamentos de cromatina.`,
+        annotations: [`Núcleo en herradura`, `Sin filamentos finos`, `Gránulos neutrófilos finos`],
+        svgType: `banda`
+      },
+      {
+        id: `blanca-segmentado`,
+        series: `blanca`,
+        seriesLabel: `Serie Blanca / Leucocitaria`,
+        order: 6,
+        name: `Polimorfonuclear Segmentado (Neutrófilo)`,
+        compartment: `sp`,
+        compartmentLabel: `Sangre Periférica (50–70% leucocitos)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `10–14 µm`,
+        diameterNum: 11.5,
+        ncRatio: `Baja (1:3)`,
+        chromatin: `Densa, en placas oscuras`,
+        cytoplasm: `Rosado pálido con abundante granulación neutrófila fina color lila-salmón`,
+        description: `Leucocito maduro encargado de la fagocitosis bacteriana. Presenta de 2 a 5 lóbulos nucleares (habitualmente 3–4) unidos por finos puentes filamentosos de cromatina.`,
+        clinicalKey: `La presencia de >5 lóbulos (hipersegmentación) orienta a anemia megaloblástica; la presencia de cuerpos de Döhle periféricos azules orienta a infección grave o anomalía de May-Hegglin.`,
+        caption: `PMN Neutrófilo segmentado: 3–4 lóbulos unidos por puentes filamentosos finos.`,
+        annotations: [`3–4 lóbulos nucleares`, `Puentes filamentosos`, `Gránulos finos específicos`],
+        svgType: `segmentado`
+      },
+      {
+        id: `blanca-linfocito-monocito`,
+        series: `blanca`,
+        seriesLabel: `Serie Blanca / Leucocitaria`,
+        order: 7,
+        name: `Linfocito Maduro y Monocito`,
+        compartment: `sp`,
+        compartmentLabel: `Sangre Periférica (Linf 20–40% · Mon 2–8%)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `7–10 µm (Linf) · 14–20 µm (Mon)`,
+        diameterNum: 13.5,
+        ncRatio: `Alta en linfocito (3:1) · Media en monocito (1:1)`,
+        chromatin: `Compacta en bloque (linfocito) vs. laxa en "encaje peinado" (monocito)`,
+        cytoplasm: `Escaso azul celeste (linfocito) vs. abundante gris-azulado con vacuolas (monocito)`,
+        description: `Células mononucleadas maduras de sangre periférica. El linfocito pequeño es de talla similar al eritrocito, mientras que el monocito es el leucocito circulante más grande y precursor de los macrófagos tisulares.`,
+        clinicalKey: `Los linfocitos B, T y NK maduros comparten morfología básica (las NK suelen ser linfocitos grandes granulares); los monocitos al migrar a tejidos forman el sistema mononuclear fagocítico.`,
+        caption: `Comparación directa en sangre periférica: linfocito pequeño compacto y monocito vacuolado.`,
+        annotations: [`Linfocito: cromatina densa`, `Monocito: núcleo cerebriforme`, `Citoplasma gris-azulado vacuolado`],
+        svgType: `linfocito_monocito`
+      },
+      {
+        id: `mega-megacariocito`,
+        series: `megacariocitica`,
+        seriesLabel: `Serie Megacariocítica / Plaquetaria`,
+        order: 1,
+        name: `Megacariocito Maduro (Médula Ósea)`,
+        compartment: `mo`,
+        compartmentLabel: `Médula Ósea (<0,5% células nucleadas)`,
+        stain: `May-Grünwald Giemsa · 400x / 1000x`,
+        diameter: `40–100 µm`,
+        diameterNum: 65.0,
+        ncRatio: `Baja (poliploide 8N–64N)`,
+        chromatin: `Muy densa y gruesa en núcleo multilobulado superpuesto`,
+        cytoplasm: `Extenso, rosado-azulado granular con demarcación de futuras plaquetas en la periferia`,
+        description: `Célula hematopoyética de mayor tamaño en la médula ósea. Crece mediante endomitosis (duplicación nuclear sin división citoplasmática) y fragmenta su periferia en proplaquetas.`,
+        clinicalKey: `En estados de alto recambio periférico (como la PTI) se observan megacariocitos hiperplásicos y liberación de plaquetas gigantes directamente desde los bordes citoplasmáticos.`,
+        caption: `Médula ósea: megacariocito gigante poliploide liberando plaquetas en su periferia.`,
+        annotations: [`Tamaño gigante (40–100 µm)`, `Núcleo poliploide lobulado`, `Demarcación proplaquetaria`],
+        svgType: `megacariocito`
+      },
+      {
+        id: `mega-plaqueta`,
+        series: `megacariocitica`,
+        seriesLabel: `Serie Megacariocítica / Plaquetaria`,
+        order: 2,
+        name: `Plaqueta Normal y Plaqueta Gigante`,
+        compartment: `sp`,
+        compartmentLabel: `Sangre Periférica (150–450 ×10⁹/L)`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        diameter: `2–4 µm (Normal) · >7 µm (Gigante)`,
+        diameterNum: 3.0,
+        ncRatio: `Anucleado (fragmento citoplasmático)`,
+        chromatin: `Ausente`,
+        cytoplasm: `Hialómero periférico azul claro y granulómero central púrpura-rojizo`,
+        description: `Fragmentos citoplasmáticos anucleados esenciales para la hemostasia primaria. En el frotis aparecen aisladas o en pequeños agregados, con contorno discretamente irregular.`,
+        clinicalKey: `Las plaquetas gigantes (tamaño igual o superior al eritrocito) aparecen en PTI, anemias falciformes y anomalía de May-Hegglin. El satelitismo plaquetario alrededor de neutrófilos es un artefacto in vitro dependiente de EDTA.`,
+        caption: `Comparación entre plaquetas normales (2–4 µm) y macroplaqueta gigante (>7 µm).`,
+        annotations: [`Granulómero central`, `Hialómero periférico`, `Plaqueta gigante ≥ eritrocito`],
+        svgType: `plaqueta`
+      }
+    ];
+
+    const SEMIOLOGY_DATA = [
+      { category: `tamaño`, group: `Alteraciones del tamaño`, term: `Anisocitosis`, desc: `Variabilidad anormal en el diámetro de los eritrocitos (RDW elevado >15%).`, assoc: `Anemias carenciales, síndromes mielodisplásicos, transfusión reciente, hemoglobinopatía SS.` },
+      { category: `tamaño`, group: `Alteraciones del tamaño`, term: `Macrocitosis`, desc: `Predominio de eritrocitos con diámetro >8,5 µm (VCM >100 fL).`, assoc: `Anemia megaloblástica (déficit B12/folato), mielodisplasia, hepatopatía, reticulocitosis.` },
+      { category: `tamaño`, group: `Alteraciones de la coloración`, term: `Hipocromía y Anisocromía`, desc: `Aumento de la palidez central (>1/3 del diámetro) y coexistencia de poblaciones normocrómicas e hipocrómicas.`, assoc: `Anemia ferropénica, talasemias, anemia de células falciformes (S-talasemias).` },
+      { category: `tamaño`, group: `Alteraciones de la coloración`, term: `Basofilia difusa / Policromasia`, desc: `Eritrocitos de tinte grisáceo-azulado por retención de ARN ribosómico tras salida medular rápida.`, assoc: `Reticulocitosis compensadora, hemólisis aguda, anemia drepanocítica.` },
+      { category: `forma`, group: `Poiquilocitosis`, term: `Drepanocitos (Células falciformes)`, desc: `Eritrocitos alargados en forma de hoz o media luna por polimerización de HbS desoxigenada.`, assoc: `Anemia drepanocítica (HbSS, HbSC, S-talasemias) por sustitución Glu→Val en codón 6.` },
+      { category: `forma`, group: `Poiquilocitosis`, term: `Codocitos (Células en diana / blanco de tiro)`, desc: `Eritrocitos con acumulación central de hemoglobina rodeada de un anillo pálido.`, assoc: `Talasemias, hemoglobinopatías (HbSS, HbC), hepatopatía obstructiva, posesplenectomía.` },
+      { category: `forma`, group: `Poiquilocitosis`, term: `Eliptocitos y Dacriocitos`, desc: `Formas ovaladas alargadas (eliptocitos) o en lágrima con prolongación única (dacriocitos).`, assoc: `Eliptocitosis hereditaria, mielofibrosis, eritropoyesis ineficaz y hemoglobinopatía HbSS.` },
+      { category: `inclusiones`, group: `Inclusiones eritrocitarias`, term: `Punteado basófilo`, desc: `Gránulos azul-violáceos dispersos por el citoplasma por precipitación espontánea de ribosomas.`, assoc: `Anemia megaloblástica, anemia sideroblástica, mielodisplasia, intoxicación por plomo, eritroblastosis fetal.` },
+      { category: `inclusiones`, group: `Inclusiones eritrocitarias`, term: `Inclusiones de HbH`, desc: `Múltiples puntos azul-verdosos uniformes en "pelota de golf" revelados con azul cresil brillante.`, assoc: `Enfermedad de HbH (talasemia alfa con deleción de 3 genes alfa).` },
+      { category: `inclusiones`, group: `Semiología leucocitaria`, term: `Bastones de Auer`, desc: `Estructuras aciculares azurófilas intracitoplasmáticas formadas por fusión de gránulos primarios.`, assoc: `Leucemia Mieloide Aguda (LMA M1, M2, M3 especialmente); ausentes en leucemias linfoblásticas.` },
+      { category: `inclusiones`, group: `Semiología leucocitaria`, term: `Cuerpos de Döhle`, desc: `Inclusiones periféricas azul-pálido en el citoplasma de neutrófilos por cristalización de ribosomas y RER.`, assoc: `Anomalía de May-Hegglin (junto a plaquetas gigantes y trombocitopenia) e infecciones graves.` },
+      { category: `inclusiones`, group: `Semiología plaquetaria`, term: `Plaquetas gigantes y Satelitismo`, desc: `Trombocitos de tamaño ≥ eritrocito; el satelitismo muestra plaquetas adheridas en corona a neutrófilos.`, assoc: `PTI, May-Hegglin, HbSS (plaquetas gigantes); pseudotrombocitopenia por EDTA (satelitismo).` }
+    ];
+
+    const CLINICAL_CASES = [
+      {
+        id: `caso-drepanocitosis`,
+        title: `Caso 1 · Anemia Hemolítica Crónica con Dolor Óseo`,
+        sampleLabel: `Sangre Periférica · EDTA`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        history: `Paciente joven con crisis vasooclusivas recurrentes e ictericia leve. En el frotis de sangre periférica se observan múltiples drepanocitos (células en hoz), codocitos en diana, eliptocitos, dacriocitos, hipocromía, basofilia difusa, anisocromía, un normoblasto ortocromático circulante, un linfocito y trombocitosis con plaquetas gigantes.`,
+        smearCaption: `Frotis periférico: múltiples drepanocitos, codocitos, normoblasto ortocromático y plaquetas gigantes.`,
+        svgType: `case_hbss`,
+        question: `¿Qué defecto molecular y entidad patológica explican este frotis?`,
+        options: [
+          { id: `a`, text: `Anemia de Células Falciformes (HbSS) por sustitución de ácido glutámico por valina en el codón 6 de la cadena beta.` },
+          { id: `b`, text: `Enfermedad de HbH por deleción de tres genes de alfa-globina.` },
+          { id: `c`, text: `Anemia megaloblástica pura por déficit de vitamina B12.` },
+          { id: `d`, text: `Leucemia Mieloide Aguda promielocítica (FAB M3).` }
+        ],
+        correctId: `a`,
+        explanation: `Correcto. La hemoglobinopatía HbSS (sustitución de ácido glutámico por valina en el codón 6 de la beta-globina) provoca polimerización de la HbS desoxigenada formando drepanocitos. El recambio acelerado explica la salida de normoblastos ortocromáticos, la basofilia difusa y las plaquetas gigantes.`
+      },
+      {
+        id: `caso-hbh`,
+        title: `Caso 2 · Microcitosis con Tinción Supravital Especial`,
+        sampleLabel: `Sangre Periférica · EDTA`,
+        stain: `Azul cresil brillante · 1000x`,
+        history: `Estudio de anemia microcítica hipocrómica moderada con esplenomegalia. Al incubar sangre entera con EDTA en tinción supravital de azul cresil brillante a 1000x, se identifican numerosos eritrocitos repletos de pequeñas inclusiones esféricas azuladas distribuidas homogéneamente (aspecto en "pelota de golf"), junto a un reticulocito con red filamentosa densa.`,
+        smearCaption: `Azul cresil brillante (1000x): eritrocitos con múltiples inclusiones de HbH y un reticulocito.`,
+        svgType: `case_hbh`,
+        question: `¿Cuál es la causa genética de las inclusiones observadas?`,
+        options: [
+          { id: `a`, text: `Aglutinación espontánea de ribosomas en la médula ósea por déficit de folato.` },
+          { id: `b`, text: `Enfermedad de HbH por deleción de tres genes de talasemia alfa (precipitación de tetrámeros β4).` },
+          { id: `c`, text: `Cristalización de ribosomas en neutrófilos polimorfonucleares (Cuerpos de Döhle).` },
+          { id: `d`, text: `Fusión de gránulos azurófilos primarios en mieloblastos leucémicos.` }
+        ],
+        correctId: `b`,
+        explanation: `Exacto. En la enfermedad de HbH (deleciones de 3 genes de talasemia alfa), el exceso relativo de cadenas beta forma tetrámeros β4 inestables (HbH) que precipitan con azul cresil brillante formando inclusiones características en "pelota de golf", distinguibles del retículo filamentoso de un reticulocito vecino.`
+      },
+      {
+        id: `caso-lma`,
+        title: `Caso 3 · Leucocitosis Blástica con Trastornos Hemorrágicos`,
+        sampleLabel: `Médula Ósea y Sangre Periférica`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        history: `Paciente adulto con pancitopenia sintomática, fiebre y equimosis. El aspirado medular muestra >20% de blastos grandes con cromatina fina reticulada, varios nucléolos visibles y estructuras lineales rojizo-púrpura en forma de aguja (bastones de Auer) dentro del citoplasma. En casos comparativos de LAM M5 predominan monoblastos con infiltración gingival y compromiso del SNC.`,
+        smearCaption: `Médula ósea (LMA Auer+): mieloblastos con cromatina laxa, nucléolos y bastones de Auer intracitoplasmáticos.`,
+        svgType: `case_lma`,
+        question: `¿Qué confirma la presencia de bastones de Auer en los blastos?`,
+        options: [
+          { id: `a`, text: `Estirpe mieloide de la leucemia aguda (LMA, como subtipos FAB M1, M2 o M3).` },
+          { id: `b`, text: `Reacción leucoeritroblástica benigna secundaria a infección viral.` },
+          { id: `c`, text: `Anomalía constitucional de May-Hegglin sin transformación neoplásica.` },
+          { id: `d`, text: `Eritroleucemia pura sin componente granulocítico ni monocítico.` }
+        ],
+        correctId: `a`,
+        explanation: `Correcto. Los bastones de Auer están compuestos por gránulos azurófilos primarios fusionados (peroxidasa positivos) y confirman de manera concluyente la naturaleza mieloide del blasto en la clasificación FAB de las LMA (en contraste con los monoblastos de la LAM M5, que característicamente producen hipertrofia gingival y afectación extramedular/SNC).`
+      },
+      {
+        id: `caso-may-hegglin`,
+        title: `Caso 4 · Trombocitopenia con Inclusiones Leucocitarias`,
+        sampleLabel: `Sangre Periférica · EDTA`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        history: `Hallazgo incidental de recuento plaquetario bajo en analizador automático, sin sangrado severo. Al revisar el frotis periférico para descartar pseudotrombocitopenia por satelitismo plaquetario, se confirman plaquetas gigantes aisladas (tamaño mayor a un eritrocito) junto a neutrófilos polimorfonucleares que presentan inclusiones basófilas pálidas en la periferia del citoplasma (Cuerpos de Döhle).`,
+        smearCaption: `Frotis periférico: trombocitopenia con plaqueta gigante y neutrófilo con Cuerpos de Döhle.`,
+        svgType: `case_may_hegglin`,
+        question: `¿Qué tríada morfológica caracteriza este frotis?`,
+        options: [
+          { id: `a`, text: `Anomalía de May-Hegglin (trombocitopenia, plaquetas gigantes y cuerpos de Döhle por cristalización de ribosomas en PMN).` },
+          { id: `b`, text: `Enfermedad de Gaucher con infiltración de cerebrósidos en histiocitos.` },
+          { id: `c`, text: `Hemoglobinuria paroxística al frío con eritrofagocitosis masiva.` },
+          { id: `d`, text: `Satelitismo plaquetario fisiológico inducido por heparina.` }
+        ],
+        correctId: `a`,
+        explanation: `Correcto. La anomalía de May-Hegglin reúne trombocitopenia, macroplaquetas/plaquetas gigantes e inclusiones citoplasmáticas tipo Cuerpos de Döhle en granulocitos, aunque plaquetas gigantes aisladas también se observan en la púrpura trombocitopénica inmune (PTI).`
+      },
+      {
+        id: `caso-leucoeritroblastica`,
+        title: `Caso 5 · Precursores Inmaduros de Dos Series en Sangre Periférica`,
+        sampleLabel: `Sangre Periférica · EDTA`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        history: `Paciente con síndrome constitucional y dolor lumbar. El frotis de sangre periférica revela salida simultánea de precursores eritroides nucleados (normoblasto basófilo y eritroblastos policromáticos con punteado basófilo) y precursores mieloides inmaduros (mielocito eosinófilo con gránulos naranja-rojizos gruesos), además de macrocitosis asociada.`,
+        smearCaption: `Reacción leucoeritroblástica: normoblasto basófilo y mielocito eosinófilo en sangre periférica.`,
+        svgType: `case_leucoeritroblastica`,
+        question: `¿Cómo se denomina esta alteración y qué sugiere en médula ósea?`,
+        options: [
+          { id: `a`, text: `Reacción leucoeritroblástica, altamente sugestiva de ocupación o infiltración medular (p. ej. metástasis a médula ósea).` },
+          { id: `b`, text: `Frotis normal de sangre periférica en recién nacido a término.` },
+          { id: `c`, text: `Talasemia alfa menor sin compromiso de la serie blanca.` },
+          { id: `d`, text: `Trombocitosis reactiva aislada sin alteración eritroide.` }
+        ],
+        correctId: `a`,
+        explanation: `Exacto. La coexistencia en sangre periférica de precursores mieloides inmaduros (mielocito eosinófilo) y eritroblastos (normoblasto basófilo) constituye una reacción leucoeritroblástica, signo clásico de disrupción arquitectural de la médula ósea por metástasis, mielofibrosis o estrés hematopoyético severo.`
+      },
+      {
+        id: `caso-gaucher-eritrofagocitosis`,
+        title: `Caso 6 · Histiocitosis Medular y Fagocitosis Celular`,
+        sampleLabel: `Aspirado de Médula Ósea / Frotis`,
+        stain: `May-Grünwald Giemsa · 1000x`,
+        history: `Paciente con hepatoesplenomegalia marcada y citopenias. El aspirado de médula ósea muestra histiocitos voluminosos del sistema mononuclear fagocítico con citoplasma amplio de aspecto fibrilar estriado ("papel arrugado") por acumulación lisosomal de cerebrósidos. En el estudio diferencial de fagocitosis por macrófagos también se evalúa la presencia de glóbulos rojos íntegros ingeridos (eritrofagocitosis).`,
+        smearCaption: `Médula ósea: histiocito infiltrado con cerebrósidos (Enfermedad de Gaucher) y contraste con eritrofagocitosis.`,
+        svgType: `case_gaucher`,
+        question: `¿Cuál es la interpretación correcta de ambos fenómenos del sistema mononuclear fagocítico?`,
+        options: [
+          { id: `a`, text: `Célula de Gaucher (depósito de cerebrósidos en MO) frente a eritrofagocitosis (ingestión de eritrocitos vista en crioaglutininas, anemia hemolítica autoinmune o síndrome hemofagocítico).` },
+          { id: `b`, text: `Megacariocito maduro liberando plaquetas normales en médula ósea sana.` },
+          { id: `c`, text: `Monoblastos de leucemia aguda M5 con bastones de Auer.` },
+          { id: `d`, text: `Eritroblastos ortocromáticos expulsando su núcleo picnótico.` }
+        ],
+        correctId: `a`,
+        explanation: `Correcto. La enfermedad de Gaucher produce histiocitos medulares cargados de glucocerebrósidos con citoplasma estriado característico; por su parte, la eritrofagocitosis corresponde a la ingestión activa de eritrocitos por macrófagos en anemias hemolíticas autoinmunes/isoinmunes, enfermedad por crioaglutininas, hemoglobinuria paroxística al frío, infecciones o síndrome hemofagocítico.`
+      }
+    ];
+
+    let appState = {
+      seriesFilter: `all`,
+      searchQuery: ``,
+      selectedStageId: STAGES_DATA[0].id,
+      studiedStages: [],
+      showStageLabels: true,
+      zoomStage: false,
+      selectedCaseId: CLINICAL_CASES[0].id,
+      caseAnswers: {},
+      showCasePointers: true,
+      zoomCase: false
+    };
+
+    function getFilteredStages() {
+      const q = appState.searchQuery.trim().toLowerCase();
+      return STAGES_DATA.filter((s) => {
+        const matchSeries = appState.seriesFilter === `all` || s.series === appState.seriesFilter;
+        if (!matchSeries) return false;
+        if (!q) return true;
+        const blob = `${s.name} ${s.seriesLabel} ${s.description} ${s.cytoplasm} ${s.chromatin} ${s.clinicalKey}`.toLowerCase();
+        return blob.includes(q);
+      });
+    }
+
+    function setSeriesFilter(series, btnEl) {
+      appState.seriesFilter = series;
+      const buttons = document.querySelectorAll(`.lineage-tabs button[data-series]`);
+      buttons.forEach((b) => b.classList.remove(`is-active`));
+      if (btnEl) btnEl.classList.add(`is-active`);
+
+      const filtered = getFilteredStages();
+      if (filtered.length > 0 && !filtered.some((s) => s.id === appState.selectedStageId)) {
+        appState.selectedStageId = filtered[0].id;
+      }
+      renderStageList();
+      renderStageDetail();
+      persistAppState();
+    }
+
+    function handleStageSearch(value) {
+      appState.searchQuery = value || ``;
+      const filtered = getFilteredStages();
+      if (filtered.length > 0 && !filtered.some((s) => s.id === appState.selectedStageId)) {
+        appState.selectedStageId = filtered[0].id;
+      }
+      renderStageList();
+      renderStageDetail();
+    }
+
+    function selectStage(stageId) {
+      appState.selectedStageId = stageId;
+      renderStageList();
+      renderStageDetail();
+      persistAppState();
+    }
+
+    function toggleCurrentStageStudied() {
+      const id = appState.selectedStageId;
+      const idx = appState.studiedStages.indexOf(id);
+      if (idx === -1) {
+        appState.studiedStages.push(id);
+      } else {
+        appState.studiedStages.splice(idx, 1);
+      }
+      renderStageList();
+      renderStageDetail();
+      updateKpis();
+      persistAppState();
+    }
+
+    function toggleStageAnnotations() {
+      appState.showStageLabels = !appState.showStageLabels;
+      renderStageDetail();
+    }
+
+    function toggleStageZoom() {
+      appState.zoomStage = !appState.zoomStage;
+      const svg = document.getElementById(`stage-svg`);
+      const btn = document.getElementById(`btn-toggle-zoom`);
+      if (svg) svg.classList.toggle(`is-zoomed`, appState.zoomStage);
+      if (btn) btn.classList.toggle(`is-active`, appState.zoomStage);
+    }
+
+    function highlightNav(el) {
+      document.querySelectorAll(`.nav-link`).forEach((l) => l.classList.remove(`is-active`));
+      if (el) el.classList.add(`is-active`);
+    }
+
+    function renderStageList() {
+      const container = document.getElementById(`stage-list`);
+      const countChip = document.getElementById(`series-count-chip`);
+      if (!container) return;
+
+      const filtered = getFilteredStages();
+      if (countChip) {
+        countChip.textContent = `${filtered.length} ${filtered.length === 1 ? `estadio` : `estadios`} visibles`;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="status-card" data-status="watch"><span class="kicker">Sin coincidencias</span><p style="margin:0;">Ningún estadio coincide con "${escapeHtml(appState.searchQuery)}". Limpia el filtro de búsqueda para explorar toda la serie.</p></div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map((s) => {
+        const isSelected = s.id === appState.selectedStageId;
+        const isStudied = appState.studiedStages.includes(s.id);
+        const cls = `stage-item${isSelected ? ` is-selected` : ``}${isStudied ? ` is-studied` : ``}`;
+        return `<button type="button" class="${cls}" role="option" aria-selected="${isSelected}" onclick="selectStage('${s.id}')">
+          <div class="stage-item-top">
+            <span class="stage-item-name">${s.name}</span>
+            ${isStudied ? `<span class="chip">Estudiado</span>` : `<span class="chip" data-status="info">${s.compartment === `mo` ? `MO` : `SP`}</span>`}
+          </div>
+          <span class="stage-item-sub">${s.seriesLabel} · ${s.diameter}</span>
+        </button>`;
+      }).join(``);
+    }
+
+    function renderStageDetail() {
+      const stage = STAGES_DATA.find((s) => s.id === appState.selectedStageId) || STAGES_DATA[0];
+      if (!stage) return;
+
+      setText(`detail-lineage-kicker`, stage.seriesLabel);
+      setText(`detail-title`, stage.name);
+      setText(`detail-compartment-chip`, stage.compartmentLabel);
+      setText(`detail-stain-label`, stage.stain);
+      setText(`detail-micro-caption`, stage.caption);
+      setText(`detail-description`, stage.description);
+      setText(`spec-diameter`, stage.diameter);
+      setText(`spec-nc`, stage.ncRatio);
+      setText(`spec-chromatin`, stage.chromatin);
+      setText(`spec-cytoplasm`, stage.cytoplasm);
+      setText(`detail-clinical-key`, stage.clinicalKey);
+
+      const bgEl = document.getElementById(`stage-microscope-bg`);
+      if (bgEl) bgEl.setAttribute(`data-compartment`, stage.compartment);
+
+      const isStudied = appState.studiedStages.includes(stage.id);
+      const studyBtn = document.getElementById(`btn-mark-studied`);
+      if (studyBtn) {
+        studyBtn.innerHTML = isStudied
+          ? `<i data-lucide="check-circle-2" aria-hidden="true"></i> Estadio estudiado`
+          : `<i data-lucide="check-circle" aria-hidden="true"></i> Marcar como estudiado`;
+        studyBtn.className = isStudied ? `btn btn-secondary` : `btn btn-primary`;
+      }
+
+      const labelBtn = document.getElementById(`btn-toggle-labels`);
+      if (labelBtn) labelBtn.classList.toggle(`is-active`, appState.showStageLabels);
+
+      const annContainer = document.getElementById(`detail-annotations`);
+      if (annContainer) {
+        annContainer.innerHTML = appState.showStageLabels
+          ? stage.annotations.map((a) => `<span class="chip" data-status="info">${a}</span>`).join(``)
+          : ``;
+      }
+
+      const svgEl = document.getElementById(`stage-svg`);
+      if (svgEl) {
+        svgEl.innerHTML = buildMicroscopySvg(stage.svgType, appState.showStageLabels);
+        svgEl.classList.toggle(`is-zoomed`, appState.zoomStage);
+      }
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function buildMicroscopySvg(type, showLabels) {
+      const bgRbcs = `
+        <g opacity="0.72">
+          <circle cx="52" cy="58" r="21" fill="var(--stain-rbc)" />
+          <circle cx="52" cy="58" r="8" fill="var(--stain-rbc-pale)" />
+          <circle cx="342" cy="64" r="22" fill="var(--stain-rbc)" />
+          <circle cx="342" cy="64" r="8" fill="var(--stain-rbc-pale)" />
+          <circle cx="64" cy="242" r="20" fill="var(--stain-rbc)" />
+          <circle cx="64" cy="242" r="7" fill="var(--stain-rbc-pale)" />
+          <circle cx="338" cy="236" r="21" fill="var(--stain-rbc)" />
+          <circle cx="338" cy="236" r="8" fill="var(--stain-rbc-pale)" />
+        </g>`;
+
+      const scaleBar = `
+        <g>
+          <line x1="20" y1="280" x2="72" y2="280" stroke="var(--on-surface)" stroke-width="2.5" />
+          <text x="20" y="273" font-family="var(--font-label)" font-size="11" font-weight="700" fill="var(--on-surface)">10 µm</text>
+        </g>`;
+
+      let cellSvg = ``;
+      let labelsSvg = ``;
+
+      if (type === `proeritroblasto`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="78" fill="var(--stain-cyto-baso)" stroke="var(--stain-chromatin-dark)" stroke-width="2" />
+          <ellipse cx="155" cy="128" rx="14" ry="22" fill="var(--stain-cyto-light)" opacity="0.65" />
+          <circle cx="204" cy="150" r="59" fill="var(--stain-chromatin)" />
+          <circle cx="188" cy="136" r="10" fill="var(--stain-nucleolus)" opacity="0.85" />
+          <circle cx="222" cy="158" r="8" fill="var(--stain-nucleolus)" opacity="0.8" />`;
+        labelsSvg = labelTag(295, 78, 224, 154, `Nucléolos azulados`) + labelTag(290, 225, 250, 195, `Basofilia intensa`);
+      } else if (type === `eritroblasto_basofilo`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="62" fill="var(--stain-cyto-baso)" stroke="var(--stain-chromatin-dark)" stroke-width="1.8" />
+          <circle cx="200" cy="150" r="43" fill="var(--stain-chromatin)" />
+          <circle cx="188" cy="138" r="7" fill="var(--stain-chromatin-dark)" />
+          <circle cx="212" cy="142" r="8" fill="var(--stain-chromatin-dark)" />
+          <circle cx="195" cy="164" r="8" fill="var(--stain-chromatin-dark)" />
+          <circle cx="214" cy="162" r="6" fill="var(--stain-chromatin-dark)" />`;
+        labelsSvg = labelTag(286, 85, 220, 138, `Cromatina en grumos`) + labelTag(282, 224, 240, 185, `Sin nucléolos`);
+      } else if (type === `eritroblasto_policromatico`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="52" fill="var(--stain-rbc-poly)" stroke="var(--stain-chromatin)" stroke-width="1.5" />
+          <circle cx="200" cy="150" r="31" fill="var(--stain-chromatin-dark)" />
+          <path d="M185 135 L200 150 L216 136 M182 162 L200 150 L218 164" stroke="var(--stain-cyto-light)" stroke-width="2" opacity="0.45" fill="none" />`;
+        labelsSvg = labelTag(280, 90, 220, 145, `Bloques radiales`) + labelTag(275, 222, 232, 180, `Citoplasma gris-violáceo`);
+      } else if (type === `eritroblasto_ortocromatico`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="42" fill="var(--stain-rbc)" stroke="var(--stain-cyto-acid)" stroke-width="1.5" />
+          <circle cx="182" cy="148" r="19" fill="var(--stain-chromatin-dark)" />`;
+        labelsSvg = labelTag(275, 92, 195, 144, `Núcleo picnótico`) + labelTag(270, 220, 226, 172, `Citoplasma acidófilo`);
+      } else if (type === `reticulocito`) {
+        cellSvg = `
+          <g opacity="0.55">
+            <circle cx="70" cy="75" r="24" fill="var(--stain-cyto-light)" />
+            <circle cx="330" cy="220" r="24" fill="var(--stain-cyto-light)" />
+            <circle cx="325" cy="70" r="23" fill="var(--stain-cyto-light)" />
+          </g>
+          <circle cx="200" cy="150" r="44" fill="var(--stain-cyto-light)" stroke="var(--stain-hbh)" stroke-width="1.8" />
+          <path d="M178 136 Q196 125 215 142 T190 166 Q175 156 198 148 T216 158" fill="none" stroke="var(--stain-retic)" stroke-width="3.2" stroke-linecap="round" />
+          <circle cx="185" cy="150" r="3" fill="var(--stain-retic)" />
+          <circle cx="208" cy="136" r="2.8" fill="var(--stain-retic)" />`;
+        labelsSvg = labelTag(274, 92, 214, 142, `Red reticular de ARN`) + labelTag(266, 224, 228, 178, `Azul cresil brillante`);
+      } else if (type === `eritrocito_maduro`) {
+        cellSvg = `
+          <circle cx="120" cy="105" r="32" fill="var(--stain-rbc)" />
+          <circle cx="120" cy="105" r="11" fill="var(--stain-rbc-pale)" />
+          <circle cx="205" cy="148" r="34" fill="var(--stain-rbc)" />
+          <circle cx="205" cy="148" r="12" fill="var(--stain-rbc-pale)" />
+          <circle cx="282" cy="112" r="31" fill="var(--stain-rbc)" />
+          <circle cx="282" cy="112" r="10" fill="var(--stain-rbc-pale)" />
+          <circle cx="145" cy="212" r="32" fill="var(--stain-rbc)" />
+          <circle cx="145" cy="212" r="11" fill="var(--stain-rbc-pale)" />
+          <circle cx="268" cy="218" r="32" fill="var(--stain-rbc)" />
+          <circle cx="268" cy="218" r="11" fill="var(--stain-rbc-pale)" />`;
+        labelsSvg = labelTag(268, 72, 214, 144, `Palidez central 1/3`) + labelTag(272, 255, 225, 174, `Normocito (~7,5 µm)`);
+      } else if (type === `mieloblasto`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="68" fill="var(--stain-cyto-baso)" opacity="0.88" />
+          <ellipse cx="202" cy="148" rx="53" ry="50" fill="var(--stain-chromatin)" />
+          <circle cx="182" cy="134" r="9" fill="var(--stain-nucleolus)" />
+          <circle cx="218" cy="140" r="8" fill="var(--stain-nucleolus)" />
+          <circle cx="202" cy="168" r="7" fill="var(--stain-nucleolus)" />`;
+        labelsSvg = labelTag(286, 82, 222, 138, `3 nucléolos claros`) + labelTag(280, 224, 248, 186, `Citoplasma basófilo escaso`);
+      } else if (type === `promielocito`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="74" fill="var(--stain-cyto-light)" stroke="var(--stain-cyto-baso)" stroke-width="2" />
+          <ellipse cx="182" cy="142" rx="44" ry="40" fill="var(--stain-chromatin)" />
+          <circle cx="176" cy="138" r="8" fill="var(--stain-nucleolus)" />
+          <ellipse cx="226" cy="152" rx="18" ry="22" fill="var(--stain-rbc-pale)" opacity="0.8" />
+          ${dotsGroup([[232,115],[248,132],[252,155],[240,185],[212,196],[175,198],[145,178],[138,142],[148,112],[215,102],[255,172],[192,208]], `var(--stain-granule-azur)`, 3.2)}`;
+        labelsSvg = labelTag(286, 84, 248, 132, `Gránulos azurófilos`) + labelTag(282, 224, 232, 158, `Arcoplasma claro`);
+      } else if (type === `mielocito`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="58" fill="var(--stain-cyto-acid)" stroke="var(--stain-rbc)" stroke-width="1.5" />
+          <path d="M168 116 C144 134 146 172 174 184 C194 192 204 176 202 150 C200 124 188 106 168 116 Z" fill="var(--stain-chromatin-dark)" />
+          ${dotsGroup([[214,120],[228,132],[238,150],[224,166],[212,182],[235,178],[246,142],[208,142],[218,156],[238,122]], `var(--stain-granule-eo)`, 3.4)}`;
+        labelsSvg = labelTag(280, 86, 192, 134, `Sin nucléolos`) + labelTag(275, 224, 236, 160, `Gránulos específicos`);
+      } else if (type === `metamielocito`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="52" fill="var(--stain-cyto-acid)" stroke="var(--stain-rbc)" stroke-width="1.5" />
+          <path d="M174 114 C150 130 152 174 180 186 C202 194 220 176 212 162 C200 154 202 142 214 132 C220 122 198 102 174 114 Z" fill="var(--stain-chromatin-dark)" />
+          ${dotsGroup([[218,128],[232,148],[222,172],[196,192],[166,184],[158,144],[204,116]], `var(--stain-granule-azur)`, 2.2)}`;
+        labelsSvg = labelTag(278, 90, 206, 146, `Hendidura arriñonada`) + labelTag(275, 222, 226, 174, `Gránulos secundarios`);
+      } else if (type === `banda`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="49" fill="var(--stain-cyto-acid)" stroke="var(--stain-rbc)" stroke-width="1.5" />
+          <path d="M168 122 C148 140 154 180 188 186 C220 192 238 166 230 132" fill="none" stroke="var(--stain-chromatin-dark)" stroke-width="18" stroke-linecap="round" />
+          ${dotsGroup([[196,144],[206,154],[182,158],[216,120],[162,174]], `var(--stain-granule-azur)`, 1.9)}`;
+        labelsSvg = labelTag(278, 90, 228, 134, `Núcleo en herradura`) + labelTag(275, 222, 200, 152, `Sin filamentos`);
+      } else if (type === `segmentado`) {
+        cellSvg = `
+          ${bgRbcs}
+          <circle cx="200" cy="150" r="49" fill="var(--stain-cyto-acid)" stroke="var(--stain-rbc)" stroke-width="1.5" />
+          <path d="M174 134 Q194 128 214 140 Q222 162 204 178" fill="none" stroke="var(--stain-chromatin-dark)" stroke-width="2.5" />
+          <ellipse cx="170" cy="134" rx="14" ry="11" fill="var(--stain-chromatin-dark)" />
+          <ellipse cx="220" cy="138" rx="13" ry="12" fill="var(--stain-chromatin-dark)" />
+          <ellipse cx="202" cy="178" rx="15" ry="11" fill="var(--stain-chromatin-dark)" />
+          ${dotsGroup([[186,154],[204,154],[228,164],[168,168],[196,118]], `var(--stain-granule-azur)`, 1.8)}`;
+        labelsSvg = labelTag(276, 88, 222, 136, `Lóbulos nucleares`) + labelTag(276, 222, 206, 150, `Puente filamentoso`);
+      } else if (type === `linfocito_monocito`) {
+        cellSvg = `
+          <circle cx="116" cy="152" r="36" fill="var(--stain-cyto-light)" stroke="var(--stain-cyto-baso)" stroke-width="1.4" />
+          <circle cx="114" cy="150" r="29" fill="var(--stain-chromatin-dark)" />
+          <circle cx="272" cy="150" r="64" fill="var(--stain-cyto-light)" opacity="0.72" stroke="var(--stain-outline, #7b9198)" stroke-width="1.5" />
+          <path d="M242 114 C220 132 224 176 254 186 C276 194 294 176 286 160 C272 152 276 136 290 124 C294 114 266 100 242 114 Z" fill="var(--stain-chromatin)" />
+          <circle cx="308" cy="158" r="5" fill="var(--stain-field)" />
+          <circle cx="298" cy="178" r="4" fill="var(--stain-field)" />`;
+        labelsSvg = labelTag(64, 80, 114, 120, `Linfocito maduro`) + labelTag(278, 72, 272, 114, `Monocito vacuolado`);
+      } else if (type === `megacariocito`) {
+        cellSvg = `
+          <path d="M110 148 C104 92 152 62 204 68 C264 74 294 114 288 164 C282 220 236 244 178 238 C126 232 114 196 110 148 Z" fill="var(--stain-rbc-poly)" opacity="0.86" stroke="var(--stain-chromatin)" stroke-width="2" />
+          <circle cx="176" cy="132" r="24" fill="var(--stain-chromatin-dark)" />
+          <circle cx="212" cy="126" r="22" fill="var(--stain-chromatin-dark)" />
+          <circle cx="222" cy="160" r="23" fill="var(--stain-chromatin-dark)" />
+          <circle cx="182" cy="168" r="24" fill="var(--stain-chromatin-dark)" />
+          <circle cx="164" cy="150" r="18" fill="var(--stain-chromatin)" />
+          <ellipse cx="304" cy="156" rx="14" ry="10" fill="var(--stain-platelet)" />
+          <ellipse cx="322" cy="176" rx="12" ry="9" fill="var(--stain-platelet)" />
+          <ellipse cx="292" cy="198" rx="10" ry="8" fill="var(--stain-platelet)" />`;
+        labelsSvg = labelTag(66, 62, 174, 122, `Núcleo poliploide`) + labelTag(295, 224, 306, 172, `Plaquetas liberadas`);
+      } else if (type === `plaqueta`) {
+        cellSvg = `
+          <circle cx="132" cy="152" r="32" fill="var(--stain-rbc)" />
+          <circle cx="132" cy="152" r="11" fill="var(--stain-rbc-pale)" />
+          <ellipse cx="204" cy="120" rx="11" ry="8" fill="var(--stain-cyto-light)" stroke="var(--stain-platelet)" stroke-width="1.2" />
+          <circle cx="204" cy="120" r="4" fill="var(--stain-chromatin)" />
+          <ellipse cx="268" cy="164" rx="34" ry="28" fill="var(--stain-cyto-light)" stroke="var(--stain-platelet)" stroke-width="1.5" />
+          ${dotsGroup([[258,158],[268,166],[278,156],[264,174],[275,172]], `var(--stain-chromatin)`, 3.2)}`;
+        labelsSvg = labelTag(190, 74, 204, 114, `Plaqueta normal`) + labelTag(262, 232, 268, 184, `Plaqueta gigante`);
+      }
+
+      return `${cellSvg}${showLabels ? labelsSvg : ``}${scaleBar}`;
+    }
+
+    function buildCaseSvg(type, showPointers) {
+      let content = ``;
+      const scaleBar = `<g><line x1="20" y1="280" x2="72" y2="280" stroke="var(--on-surface)" stroke-width="2.5" /><text x="20" y="273" font-family="var(--font-label)" font-size="11" font-weight="700" fill="var(--on-surface)">10 µm</text></g>`;
+
+      if (type === `case_hbss`) {
+        content = `
+          <path d="M90 120 Q135 80 175 110 Q140 112 90 120 Z" fill="var(--stain-rbc)" stroke="var(--stain-granule-azur)" stroke-width="1" />
+          <path d="M220 198 Q265 155 310 190 Q268 188 220 198 Z" fill="var(--stain-rbc)" stroke="var(--stain-granule-azur)" stroke-width="1" />
+          <path d="M126 226 Q172 192 204 232 Q164 218 126 226 Z" fill="var(--stain-rbc)" />
+          <circle cx="290" cy="95" r="28" fill="var(--stain-rbc-pale)" stroke="var(--stain-rbc)" stroke-width="3" />
+          <circle cx="290" cy="95" r="10" fill="var(--stain-rbc)" />
+          <circle cx="188" cy="158" r="32" fill="var(--stain-rbc)" />
+          <circle cx="176" cy="156" r="15" fill="var(--stain-chromatin-dark)" />
+          <ellipse cx="82" cy="186" rx="22" ry="18" fill="var(--stain-cyto-light)" stroke="var(--stain-platelet)" stroke-width="1.2" />
+          ${dotsGroup([[78,184],[86,188],[82,192]], `var(--stain-chromatin)`, 2.5)}
+          ${showPointers ? labelTag(75, 62, 130, 102, `Drepanocitos`) + labelTag(265, 52, 290, 82, `Codocito (en diana)`) + labelTag(260, 148, 198, 158, `Normoblasto ortocromático`) + labelTag(48, 240, 82, 198, `Plaqueta gigante`) : ``}`;
+      } else if (type === `case_hbh`) {
+        const hbhCell = (cx, cy, r) => `
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--stain-cyto-light)" stroke="var(--stain-hbh)" stroke-width="1.6" />
+          ${dotsGroup([[cx-14,cy-12],[cx,cy-16],[cx+14,cy-8],[cx-16,cy+4],[cx-2,cy],[cx+12,cy+10],[cx-10,cy+16],[cx+6,cy-4]], `var(--stain-hbh)`, 2.2)}`;
+        content = `
+          ${hbhCell(115, 105, 32)}
+          ${hbhCell(220, 148, 34)}
+          ${hbhCell(140, 215, 31)}
+          <circle cx="305" cy="108" r="34" fill="var(--stain-cyto-light)" stroke="var(--stain-retic)" stroke-width="1.6" />
+          <path d="M288 96 Q305 88 320 105 T295 122 Q285 112 310 110" fill="none" stroke="var(--stain-retic)" stroke-width="3.2" stroke-linecap="round" />
+          ${showPointers ? labelTag(196, 62, 220, 128, `Inclusiones de HbH`) + labelTag(295, 178, 305, 130, `Reticulocito`) : ``}`;
+      } else if (type === `case_lma`) {
+        content = `
+          <circle cx="110" cy="110" r="24" fill="var(--stain-rbc)" /><circle cx="110" cy="110" r="8" fill="var(--stain-rbc-pale)" />
+          <circle cx="330" cy="215" r="24" fill="var(--stain-rbc)" /><circle cx="330" cy="215" r="8" fill="var(--stain-rbc-pale)" />
+          <circle cx="195" cy="150" r="64" fill="var(--stain-cyto-baso)" opacity="0.85" />
+          <ellipse cx="188" cy="146" rx="46" ry="44" fill="var(--stain-chromatin)" />
+          <circle cx="176" cy="136" r="8" fill="var(--stain-nucleolus)" />
+          <circle cx="204" cy="152" r="7" fill="var(--stain-nucleolus)" />
+          <line x1="226" y1="168" x2="250" y2="144" stroke="var(--stain-granule-azur)" stroke-width="4" stroke-linecap="round" />
+          <line x1="230" y1="178" x2="252" y2="162" stroke="var(--stain-granule-azur)" stroke-width="3.2" stroke-linecap="round" />
+          ${showPointers ? labelTag(275, 86, 240, 152, `Bastones de Auer +`) + labelTag(80, 62, 176, 134, `Mieloblasto (nucléolos)`) : ``}`;
+      } else if (type === `case_may_hegglin`) {
+        content = `
+          <circle cx="105" cy="96" r="26" fill="var(--stain-rbc)" /><circle cx="105" cy="96" r="9" fill="var(--stain-rbc-pale)" />
+          <circle cx="315" cy="210" r="26" fill="var(--stain-rbc)" /><circle cx="315" cy="210" r="9" fill="var(--stain-rbc-pale)" />
+          <circle cx="205" cy="148" r="56" fill="var(--stain-cyto-acid)" stroke="var(--stain-rbc)" stroke-width="1.5" />
+          <ellipse cx="182" cy="136" rx="14" ry="11" fill="var(--stain-chromatin-dark)" />
+          <ellipse cx="218" cy="140" rx="14" ry="12" fill="var(--stain-chromatin-dark)" />
+          <ellipse cx="200" cy="174" rx="15" ry="11" fill="var(--stain-chromatin-dark)" />
+          <ellipse cx="244" cy="162" rx="11" ry="7" fill="var(--stain-cyto-baso)" />
+          <ellipse cx="108" cy="210" rx="30" ry="24" fill="var(--stain-cyto-light)" stroke="var(--stain-platelet)" stroke-width="1.5" />
+          ${dotsGroup([[100,206],[110,212],[118,204],[106,218]], `var(--stain-chromatin)`, 3)}
+          ${showPointers ? labelTag(280, 96, 244, 158, `Cuerpo de Döhle`) + labelTag(172, 236, 128, 214, `Plaqueta gigante`) : ``}`;
+      } else if (type === `case_leucoeritroblastica`) {
+        content = `
+          <circle cx="132" cy="150" r="46" fill="var(--stain-cyto-baso)" />
+          <circle cx="132" cy="150" r="30" fill="var(--stain-chromatin)" />
+          <circle cx="268" cy="150" r="50" fill="var(--stain-cyto-acid)" stroke="var(--stain-rbc)" stroke-width="1.5" />
+          <path d="M242 122 C226 138 228 170 248 180 C266 186 270 166 268 150 C266 132 258 114 242 122 Z" fill="var(--stain-chromatin-dark)" />
+          ${dotsGroup([[280,132],[292,144],[284,160],[296,170],[274,174],[302,150]], `var(--stain-granule-eo)`, 3.4)}
+          ${showPointers ? labelTag(56, 72, 132, 114, `Normoblasto basófilo`) + labelTag(262, 72, 286, 134, `Mielocito eosinófilo`) : ``}`;
+      } else if (type === `case_gaucher`) {
+        content = `
+          <path d="M88 145 C84 82 140 58 192 66 C248 74 268 122 256 178 C244 228 178 242 124 226 C92 214 90 182 88 145 Z" fill="var(--stain-cyto-light)" stroke="var(--stain-cyto-baso)" stroke-width="1.8" />
+          <path d="M108 115 Q160 135 230 105 M102 150 Q170 172 242 142 M112 188 Q172 204 234 176" fill="none" stroke="var(--stain-cyto-baso)" stroke-width="1.8" opacity="0.65" />
+          <ellipse cx="138" cy="148" rx="22" ry="26" fill="var(--stain-chromatin-dark)" />
+          <circle cx="316" cy="166" r="46" fill="var(--stain-cyto-light)" stroke="var(--stain-outline, #7b9198)" stroke-width="1.5" />
+          <circle cx="304" cy="154" r="16" fill="var(--stain-chromatin)" />
+          <circle cx="332" cy="176" r="14" fill="var(--stain-rbc)" />
+          ${showPointers ? labelTag(88, 48, 178, 118, `Histiocito de Gaucher`) + labelTag(278, 90, 332, 166, `Eritrofagocitosis`) : ``}`;
+      }
+      return `${content}${scaleBar}`;
+    }
+
+    function dotsGroup(coords, fillColor, r) {
+      return coords.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${fillColor}" />`).join(``);
+    }
+
+    function labelTag(lx, ly, tx, ty, text) {
+      const boxW = Math.max(96, text.length * 6.8 + 14);
+      const boxX = Math.min(Math.max(8, lx - boxW / 2), 392 - boxW);
+      const boxY = Math.min(Math.max(8, ly - 12), 268);
+      return `
+        <g>
+          <line x1="${boxX + boxW / 2}" y1="${boxY + 11}" x2="${tx}" y2="${ty}" stroke="var(--on-surface)" stroke-width="1.2" stroke-dasharray="3 2" />
+          <circle cx="${tx}" cy="${ty}" r="3" fill="var(--primary)" />
+          <rect x="${boxX}" y="${boxY}" width="${boxW}" height="22" rx="4" fill="var(--background)" stroke="var(--primary)" stroke-width="1.2" />
+          <text x="${boxX + boxW / 2}" y="${boxY + 14.5}" text-anchor="middle" font-family="var(--font-label)" font-size="10.5" font-weight="700" fill="var(--on-surface)">${text}</text>
+        </g>`;
+    }
+
+    function renderMaturationChart(seriesKey) {
+      const svg = document.getElementById(`maturation-chart-svg`);
+      const titleEl = document.getElementById(`chart-title`);
+      if (!svg) return;
+
+      const items = STAGES_DATA
+        .filter((s) => s.series === seriesKey && s.id !== `blanca-linfocito-monocito`)
+        .sort((a, b) => a.order - b.order);
+
+      if (titleEl) {
+        titleEl.textContent = seriesKey === `roja`
+          ? `Diámetro celular (µm) en Serie Roja — Banda verde: eritrocito maduro (6,5–8,5 µm)`
+          : `Diámetro celular (µm) en Serie Mieloide — Banda verde: neutrófilo maduro (10–14 µm)`;
+      }
+
+      const w = 600, h = 260;
+      const padL = 52, padR = 28, padT = 22, padB = 56;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+      const maxY = 28;
+
+      const bandMin = seriesKey === `roja` ? 6.5 : 10;
+      const bandMax = seriesKey === `roja` ? 8.5 : 14;
+      const yBandTop = padT + plotH * (1 - bandMax / maxY);
+      const yBandBot = padT + plotH * (1 - bandMin / maxY);
+
+      let gridLines = ``;
+      [0, 7, 14, 21, 28].forEach((val) => {
+        const y = padT + plotH * (1 - val / maxY);
+        gridLines += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--outline-variant)" stroke-width="1" />`;
+        gridLines += `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-family="var(--font-label)" font-size="11" fill="var(--on-surface-variant)">${val} µm</text>`;
+      });
+
+      const points = items.map((item, idx) => {
+        const x = padL + (items.length === 1 ? plotW / 2 : (idx * plotW) / (items.length - 1));
+        const y = padT + plotH * (1 - item.diameterNum / maxY);
+        return { x, y, item };
+      });
+
+      const pathD = points.map((p, i) => `${i === 0 ? `M` : `L`}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(` `);
+
+      const markers = points.map((p) => {
+        const shortName = p.item.name.split(` `).slice(0, 2).join(` `);
+        const inRange = p.item.diameterNum >= bandMin && p.item.diameterNum <= bandMax;
+        const fill = inRange ? `var(--data-2)` : `var(--data-1)`;
+        return `
+          <circle cx="${p.x}" cy="${p.y}" r="5.5" fill="${fill}" stroke="var(--background)" stroke-width="2" />
+          <text x="${p.x}" y="${p.y - 10}" text-anchor="middle" font-family="var(--font-label)" font-size="11" font-weight="700" fill="var(--on-surface)">${p.item.diameterNum} µm</text>
+          <text x="${p.x}" y="${h - 24}" text-anchor="middle" font-family="var(--font-label)" font-size="10.5" fill="var(--on-surface-variant)">${shortName}</text>`;
+      }).join(``);
+
+      svg.innerHTML = `
+        <rect class="range-band" x="${padL}" y="${yBandTop}" width="${plotW}" height="${yBandBot - yBandTop}" />
+        <text x="${w - padR - 4}" y="${yBandTop + 13}" text-anchor="end" font-family="var(--font-label)" font-size="10.5" font-weight="700" fill="var(--secondary)">Rango maduro de referencia (${bandMin}–${bandMax} µm)</text>
+        ${gridLines}
+        <path d="${pathD}" fill="none" stroke="var(--data-1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        ${markers}`;
+    }
+
+    function filterSemioTable(cat, btnEl) {
+      document.querySelectorAll(`.lineage-tabs button[data-semio]`).forEach((b) => b.classList.remove(`is-active`));
+      if (btnEl) btnEl.classList.add(`is-active`);
+      renderSemioTable(cat);
+    }
+
+    function renderSemioTable(cat) {
+      const tbody = document.getElementById(`semio-table-body`);
+      if (!tbody) return;
+      const rows = SEMIOLOGY_DATA.filter((r) => cat === `all` || r.category === cat);
+      tbody.innerHTML = rows.map((r) => `
+        <tr>
+          <td><span class="chip" data-status="info">${r.group}</span></td>
+          <td><strong>${r.term}</strong></td>
+          <td>${r.desc}</td>
+          <td>${r.assoc}</td>
+        </tr>`).join(``);
+    }
+
+    function renderCaseSelector() {
+      const container = document.getElementById(`case-selector-list`);
+      if (!container) return;
+      container.innerHTML = CLINICAL_CASES.map((c) => {
+        const isSel = c.id === appState.selectedCaseId;
+        const ans = appState.caseAnswers[c.id];
+        let solvedAttr = ``;
+        let badge = `<span class="chip" data-status="info">Sin responder</span>`;
+        if (ans) {
+          const isOk = ans === c.correctId;
+          solvedAttr = isOk ? `correct` : `wrong`;
+          badge = isOk
+            ? `<span class="chip">Diagnóstico correcto</span>`
+            : `<span class="chip" data-status="alert">Revisar frotis</span>`;
+        }
+        return `<button type="button" class="case-card-btn${isSel ? ` is-selected` : ``}" data-solved="${solvedAttr}" role="option" aria-selected="${isSel}" onclick="selectCase('${c.id}')">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:var(--space-xs); width:100%;">
+            <span class="kicker" style="margin:0;">${c.sampleLabel}</span>
+            ${badge}
+          </div>
+          <strong style="font-family:var(--font-headline); color:var(--on-surface);">${c.title}</strong>
+        </button>`;
+      }).join(``);
+    }
+
+    function selectCase(caseId) {
+      appState.selectedCaseId = caseId;
+      renderCaseSelector();
+      renderCaseDetail();
+      persistAppState();
+    }
+
+    function renderCaseDetail() {
+      const c = CLINICAL_CASES.find((item) => item.id === appState.selectedCaseId) || CLINICAL_CASES[0];
+      if (!c) return;
+
+      setText(`case-sample-kicker`, c.sampleLabel);
+      setText(`case-title`, c.title);
+      setText(`case-stain-meta`, `Tinción: ${c.stain}`);
+      setText(`case-smear-caption`, c.smearCaption);
+      setText(`case-history`, c.history);
+      setText(`case-question`, c.question);
+
+      const userAns = appState.caseAnswers[c.id];
+      const statusChip = document.getElementById(`case-status-chip`);
+      if (statusChip) {
+        if (!userAns) {
+          statusChip.setAttribute(`data-status`, `info`);
+          statusChip.textContent = `Pendiente de diagnóstico`;
+        } else if (userAns === c.correctId) {
+          statusChip.removeAttribute(`data-status`);
+          statusChip.textContent = `Diagnóstico confirmado`;
+        } else {
+          statusChip.setAttribute(`data-status`, `alert`);
+          statusChip.textContent = `Respuesta incorrecta`;
+        }
+      }
+
+      const hintBtn = document.getElementById(`btn-case-hints`);
+      if (hintBtn) hintBtn.classList.toggle(`is-active`, appState.showCasePointers);
+
+      const svg = document.getElementById(`case-svg`);
+      if (svg) {
+        svg.innerHTML = buildCaseSvg(c.svgType, appState.showCasePointers);
+        svg.classList.toggle(`is-zoomed`, appState.zoomCase);
+      }
+
+      const optionsBox = document.getElementById(`case-options`);
+      if (optionsBox) {
+        optionsBox.innerHTML = c.options.map((opt) => {
+          let cls = `quiz-option-btn`;
+          if (userAns) {
+            if (opt.id === c.correctId) cls += ` is-correct`;
+            else if (opt.id === userAns) cls += ` is-incorrect`;
+          }
+          return `<button type="button" class="${cls}" onclick="submitCaseAnswer('${c.id}', '${opt.id}')">
+            <span><strong>${opt.id.toUpperCase()}.</strong> ${opt.text}</span>
+          </button>`;
+        }).join(``);
+      }
+
+      const feedbackBox = document.getElementById(`case-feedback`);
+      const fbTitle = document.getElementById(`case-feedback-title`);
+      const fbBody = document.getElementById(`case-feedback-body`);
+      if (feedbackBox && fbTitle && fbBody) {
+        if (userAns) {
+          const isOk = userAns === c.correctId;
+          feedbackBox.hidden = false;
+          feedbackBox.setAttribute(`data-status`, isOk ? `ok` : `alert`);
+          fbTitle.textContent = isOk ? `Interpretación correcta` : `Diagnóstico alternativo sugerido`;
+          fbBody.textContent = c.explanation;
+        } else {
+          feedbackBox.hidden = true;
+        }
+      }
+    }
+
+    function submitCaseAnswer(caseId, optionId) {
+      appState.caseAnswers[caseId] = optionId;
+      renderCaseSelector();
+      renderCaseDetail();
+      updateKpis();
+      persistAppState();
+    }
+
+    function toggleCasePointers() {
+      appState.showCasePointers = !appState.showCasePointers;
+      renderCaseDetail();
+    }
+
+    function toggleCaseZoom() {
+      appState.zoomCase = !appState.zoomCase;
+      const svg = document.getElementById(`case-svg`);
+      const btn = document.getElementById(`btn-case-zoom`);
+      if (svg) svg.classList.toggle(`is-zoomed`, appState.zoomCase);
+      if (btn) btn.classList.toggle(`is-active`, appState.zoomCase);
+    }
+
+    function updateKpis() {
+      const studiedCount = appState.studiedStages.length;
+      const totalStages = STAGES_DATA.length;
+      setText(`kpi-stages-studied`, `${studiedCount} / ${totalStages}`);
+      setText(`kpi-stages-caption`, studiedCount === totalStages ? `Todas las series revisadas` : `Progreso por estadio madurativo`);
+
+      const solvedCorrect = CLINICAL_CASES.filter((c) => appState.caseAnswers[c.id] === c.correctId).length;
+      const answeredTotal = Object.keys(appState.caseAnswers).length;
+      setText(`kpi-cases-solved`, `${solvedCorrect} / ${CLINICAL_CASES.length}`);
+      setText(`cases-progress-chip`, `${answeredTotal} de ${CLINICAL_CASES.length} respondidos`);
+    }
+
+    function exportStudyReport() {
+      const lines = [
+        `Serie,Estadio,Compartimento,Diametro,Estudiado`,
+        ...STAGES_DATA.map((s) => `"${s.seriesLabel}","${s.name}","${s.compartmentLabel}","${s.diameter}","${appState.studiedStages.includes(s.id) ? `Si` : `Pendiente`}"`),
+        ``,
+        `Caso Clinico,Muestra,Estado`,
+        ...CLINICAL_CASES.map((c) => {
+          const ans = appState.caseAnswers[c.id];
+          const status = !ans ? `Sin responder` : (ans === c.correctId ? `Correcto` : `Incorrecto`);
+          return `"${c.title}","${c.sampleLabel}","${status}"`;
+        })
+      ];
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: lines.join(`\n`),
+          contentType: `text/csv`,
+          encoding: `UTF-8`,
+          filename: `progreso_atlas_hematologia.csv`
+        });
+      }
+    }
+
+    function handleResetProgress(btn) {
+      if (!btn) return;
+      if (btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        btn.textContent = `Confirmar reinicio`;
+        setTimeout(() => {
+          if (btn.dataset.armed === `true`) {
+            btn.dataset.armed = `false`;
+            btn.innerHTML = `<i data-lucide="rotate-ccw" aria-hidden="true"></i> Reiniciar progreso`;
+            if (window.lucide) window.lucide.createIcons();
+          }
+        }, 4000);
+        return;
+      }
+      btn.dataset.armed = `false`;
+      btn.innerHTML = `<i data-lucide="rotate-ccw" aria-hidden="true"></i> Reiniciar progreso`;
+      appState.studiedStages = [];
+      appState.caseAnswers = {};
+      renderStageList();
+      renderStageDetail();
+      renderCaseSelector();
+      renderCaseDetail();
+      updateKpis();
+      persistAppState();
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function setText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, `&amp;`).replace(/</g, `&lt;`).replace(/>/g, `&gt;`).replace(/"/g, `&quot;`);
+    }
+
+    async function persistAppState() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
+        try {
+          await window.notebookAppApi.setAppState({
+            studiedStages: appState.studiedStages,
+            caseAnswers: appState.caseAnswers,
+            selectedStageId: appState.selectedStageId,
+            selectedCaseId: appState.selectedCaseId
+          });
+        } catch (err) {
+          /* ignore persistence errors in offline preview */
+        }
+      }
+    }
+
+    async function initAtlas() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+        try {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved === `object`) {
+            if (Array.isArray(saved.studiedStages)) appState.studiedStages = saved.studiedStages;
+            if (saved.caseAnswers && typeof saved.caseAnswers === `object`) appState.caseAnswers = saved.caseAnswers;
+            if (typeof saved.selectedStageId === `string`) appState.selectedStageId = saved.selectedStageId;
+            if (typeof saved.selectedCaseId === `string`) appState.selectedCaseId = saved.selectedCaseId;
+          }
+        } catch (err) {
+          /* fallback to fresh state */
+        }
+      }
+
+      renderStageList();
+      renderStageDetail();
+      renderMaturationChart(`roja`);
+      renderSemioTable(`all`);
+      renderCaseSelector();
+      renderCaseDetail();
+      updateKpis();
+
+      if (window.lucide) window.lucide.createIcons();
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener(`DOMContentLoaded`, initAtlas);
+  </script>
+</body>
+</html>
